@@ -8,7 +8,7 @@ EXEC sp_execute_external_script @language = N'R',
 mod <- unserialize(as.raw(model))
 print(summary(mod))',    
 @params = N'@model varbinary(max)',
-@model = @lmodel2;  
+@model = @lmodel2;
 GO
 
 

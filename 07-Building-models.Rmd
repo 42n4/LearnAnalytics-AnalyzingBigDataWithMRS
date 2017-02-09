@@ -5,11 +5,9 @@ output: github_document
 date: "`r Sys.Date()`"
 ---
 
-```{r setup, include=FALSE}
+```{r chap07chunk01, include=FALSE}
 source('setup.R')
 ```
-
-# Building models
 
 Trying to modeling a given behavior can be a very involved task, as the data itself and business requirements have a say into our choice for a model. Some models have higher predictive power but are less easy to interpret, and others are the other way around. Moreover, the process of building a model can also involves several stages such as choosing among many models then iterating so we can tune the model we've decided upon.
 
@@ -29,7 +27,7 @@ This chapter is not necessarily a thorough guide on running and choosing models.
 
 Let's begin by building a linear model involving two interactive terms: one between `pickup_nb` and `dropoff_nb` and another one between `pickup_dow` and `pickup_hour`. The idea here is that we think trip percent is not just influenced by which neighborhood the passengers was pickup up from, or which neighborhood they were dropped off to, but which neighborhood they were picked up from AND dropped off to. Similarly, we intuit that the day of the week and the hour of the day together influence tipping. For example, just because people tip high on Sundays between 9 and 12, doesn't mean that they tend to tip high any day of the week between 9 and 12 PM, or any time of the day on a Sunday. This intuition is encoded in the model formula argument that we pass to the `rxLinMod` function: `tip_percent ~ pickup_nb:dropoff_nb + pickup_dow:pickup_hour` where we use `:` to separate interactive terms and `+` to separate additive terms.
 
-```{r}
+```{r chap07chunk02}
 form_1 <- as.formula(tip_percent ~ pickup_nb:dropoff_nb + pickup_dow:pickup_hour)
 rxlm_1 <- rxLinMod(form_1, data = mht_xdf, dropFirst = TRUE, covCoef = TRUE)
 ```
@@ -37,7 +35,7 @@ rxlm_1 <- rxLinMod(form_1, data = mht_xdf, dropFirst = TRUE, covCoef = TRUE)
 Examining the model coefficients individually is a daunting task because of how many there are. Moreover, when working with big datasets, a lot of coefficients come out as statistically significant by virtue of large sample size, without necessarily being practically significant. Instead for now we just look at how our predictions are looking. We start by extracting each variable's factor levels into a `list` which we can pass to `expand.grid` to create a dataset with all the possible combinations of the factor levels. We then use `rxPredict` to predict `tip_percent` using the above model.
 
 
-```{r}
+```{r chap07chunk03}
 rxs <- rxSummary( ~ pickup_nb + dropoff_nb + pickup_hour + pickup_dow, mht_xdf)
 ll <- lapply(rxs$categorical, function(x) x[ , 1])
 names(ll) <- c('pickup_nb', 'dropoff_nb', 'pickup_hour', 'pickup_dow')
@@ -51,7 +49,7 @@ head(pred_df_1, 10)
 
 We can now visualize the model's predictions by plotting the average predictions for all combinations of the interactive terms.
 
-```{r}
+```{r chap07chunk04}
 library(ggplot2)
 ggplot(pred_df_1, aes(x = pickup_nb, y = dropoff_nb)) +
   geom_tile(aes(fill = tip_pred_1), colour = "white") +
@@ -60,7 +58,7 @@ ggplot(pred_df_1, aes(x = pickup_nb, y = dropoff_nb)) +
   coord_fixed(ratio = .9)
 ```
 
-```{r}
+```{r chap07chunk05}
 ggplot(pred_df_1, aes(x = pickup_dow, y = pickup_hour)) +
   geom_tile(aes(fill = tip_pred_1), colour = "white") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
@@ -72,7 +70,7 @@ ggplot(pred_df_1, aes(x = pickup_dow, y = pickup_hour)) +
 
 A question we might ask ourselves is how important is the interaction between `pickup_dow` and `pickup_hour` to the predictions? How much worse would the predictions be if we only kept the interaction between `pickup_nb` and `dropoff_nb` and dropped the second interactive term? To answer this, we can build a simpler model with `rxLinMod` in which we only include `pickup_nb:dropoff_nb`. We then predict with the simpler model and use `cbind` to append the new predictions next to the data with the old predictions we made with the more complex model.
 
-```{r}
+```{r chap07chunk06}
 form_2 <- as.formula(tip_percent ~ pickup_nb:dropoff_nb)
 rxlm_2 <- rxLinMod(form_2, data = mht_xdf, dropFirst = TRUE, covCoef = TRUE)
 pred_df_2 <- rxPredict(rxlm_2, data = pred_df_1, computeStdErrors = TRUE, writeModelVars = TRUE)
@@ -90,7 +88,7 @@ head(pred_df)
 
 We can see from the results above that the predictions with the simpler model are identical across all the days of the week and all the hours for the same pick-up and drop-off combination. Whereas the predictions by the more complex model are unique for every combination of all four variables. In other words, adding `pickup_dow:pickup_hour` to the model adds extra variation to the predictions, and what we'd like to know is if this variation contains important signals or if it more or less behaves like noise. To get to the answer, we compare the distribution of the two predictions when we break them up by `pickup_dow` and `pickup_hour`.
 
-```{r}
+```{r chap07chunk07}
 ggplot(data = pred_df) +
   geom_density(aes(x = tip_pred_1, col = "complex")) +
   geom_density(aes(x = tip_pred_2, col = "simple")) +
@@ -101,7 +99,7 @@ The simpler model shows the same distribution all throughout, because these two 
 
 Let's us `cut` to bin the tip predictions. To choose what the cut-offs should be, we can use the `rxQuantile` function to guide us.
 
-```{r}
+```{r chap07chunk08}
 dfq <- data.frame(probs = seq(0, 1, by = .05))
 dfq$tip_percent <- rxQuantile("tip_percent", data = mht_xdf, probs = dfq$probs)
 
@@ -111,7 +109,7 @@ ggplot(aes(x = tip_percent, y = probs), data = dfq) +
 
 Based on the above results, we can bin `tip_percent` by whether they are less than 8%, between 8% and 12%, between 12% and 15%, between 15% and 18%, or 18% or higher. We can then plot a bar plot showing the same information as above, but slightly easier to interpret.
 
-```{r}
+```{r chap07chunk09}
 pred_df %>%
   mutate_each(funs(cut(., c(-Inf, 8, 12, 15, 18, Inf))), tip_pred_1, tip_pred_2) %>%
   ggplot() +
@@ -130,14 +128,14 @@ In this section, we will try to improve our predictions. To do so, we can think 
 
 (1) Let's continue with linear models. Let's build a linear model very similar to the one represented by `form_1`, except that we throw `payment_type` into the mix. Let's call the new formula `form_3`.
 
-```{r, eval=FALSE}
+```{r chap07chunk10, eval=FALSE}
 form_3 <- ## formula described above goes here
 rxlm_3 <- ## build a linear model based on the above formula
 ```
 
 We now create a dataset called `pred_df` which will contain all the combinations of the features contained in `form_3`.
 
-```{r, eval=FALSE}
+```{r chap07chunk11, eval=FALSE}
 rxs <- rxSummary( ~ payment_type + pickup_nb + dropoff_nb + pickup_hour + pickup_dow, mht_xdf)
 ll <- lapply(rxs$categorical, function(x) x[ , 1])
 names(ll) <- c('payment_type', 'pickup_nb', 'dropoff_nb', 'pickup_hour', 'pickup_dow')
@@ -148,7 +146,7 @@ pred_df <- expand.grid(ll)
 
 (3) Feed `pred_all` to the following code snippet to create a plot comparing the two predictions for different days and times of the day. What is your conclusion based on the plot?
 
-```{r, eval=FALSE}
+```{r chap07chunk12, eval=FALSE}
 ggplot(data = pred_all) +
   geom_bar(aes(x = p1, fill = "model 1", group = payment_type, alpha = .5)) +
   geom_bar(aes(x = p3, fill = "model 3", group = payment_type, alpha = .5)) +
@@ -163,14 +161,14 @@ As it turns out, `payment_type` is a very important feature for what we're tryin
 
 (1) We begin by building the model and storing it in the model object `rxlm_3`.
 
-```{r}
+```{r chap07chunk13}
 form_3 <- as.formula(tip_percent ~ payment_type + pickup_nb:dropoff_nb + pickup_dow:pickup_hour)
 rxlm_3 <- rxLinMod(form_3, data = mht_xdf, dropFirst = TRUE, covCoef = TRUE)
 ```
 
 (2) There are different ways of combining the predictions. One approach is to first let's make the predictions and store them in separate datasets and use `cbind` to combine them (as long as the order of the rows doesn't change). We can then use the `mutate_at` function in `dplyr` to apply the binning transformation to the two predictions (we can use `mutate` too but `mutate_at` has a more concise notation).
 
-```{r}
+```{r chap07chunk14}
 rxs <- rxSummary( ~ payment_type + pickup_nb + dropoff_nb + pickup_hour + pickup_dow, mht_xdf)
 ll <- lapply(rxs$categorical, function(x) x[ , 1])
 names(ll) <- c('payment_type', 'pickup_nb', 'dropoff_nb', 'pickup_hour', 'pickup_dow')
@@ -187,7 +185,7 @@ pred_df %>%
 
 (3) Once we have the data ready, we feed it to `ggplot` to create bar plots comparing predictions made by each models broken up by whether the customer paid with a card or using cash.
 
-```{r}
+```{r chap07chunk15}
 ggplot(data = pred_all) +
   geom_bar(aes(x = p1, fill = "model 1", alpha = .5)) +
   geom_bar(aes(x = p3, fill = "model 3", alpha = .5)) +
@@ -198,7 +196,7 @@ ggplot(data = pred_all) +
 
 The model does in fact predict as we expected. It is also possible that are predictions are good, but need to be calibrated. We can recalibrate the predictions by adding a single line of code just before we bin the predictions. To recalibrate the predictions, we use the `rescale` function in the `scales` library. In this case, we are rescaling predictions so that both models predict a number between 0 and 20% tip.
 
-```{r}
+```{r chap07chunk16}
 library(scales)
 pred_df %>%
   cbind(select(rename(pred_df_1, p1 = tip_percent_Pred), p1)) %>%
@@ -220,7 +218,7 @@ So far we've only looked at two models from the same `rxLinMod` algorithm. When 
 
 To divide the data into training and testing portions, we first used `rxDataStep` to create a new `factor` column called `split` where each row is `"train"` or `"test"` such that a given proportion of the data (here 75 percent) is used to train a model and the rest is used to test the model's predictive power. We then used the `rxSplit` function to divide the data into the two portions. The `rx_split_xdf` function we create here combines the two steps into one and sets some arguments to defaults.
 
-```{r}
+```{r chap07chunk17}
 dir.create(file.path(data_dir, 'output'), showWarnings = FALSE)
 rx_split_xdf <- function(xdf = mht_xdf, split_perc = 0.75, output_path = "output", ...) {
   # first create a column to split by
@@ -252,7 +250,7 @@ We now run three different algorithms on the data:
 Since this is not a modeling course, we will not discuss how the algorithms are implemented. Instead we run the algorithms and use them to predict tip percent on the test data so we can see which one works better.
 
 
-```{r}
+```{r chap07chunk18}
 system.time(linmod <- rxLinMod(tip_percent ~ pickup_nb:dropoff_nb + pickup_dow:pickup_hour, data = mht_split$train, reportProgress = 0))
 system.time(dtree <- rxDTree(tip_percent ~ pickup_nb + dropoff_nb + pickup_dow + pickup_hour, data = mht_split$train, pruneCp = "auto", reportProgress = 0))
 system.time(dforest <- rxDForest(tip_percent ~ pickup_nb + dropoff_nb + pickup_dow + pickup_hour, data = mht_split$train, nTree = 30, importance = TRUE, useSparseCube = TRUE, reportProgress = 0))
@@ -260,7 +258,7 @@ system.time(dforest <- rxDForest(tip_percent ~ pickup_nb + dropoff_nb + pickup_d
 
 Since running the above algorithms can take a while, it may be worth saving the models that each return.
 
-```{r}
+```{r chap07chunk19}
 trained.models <- list(linmod = linmod, dtree = dtree, dforest = dforest)
 save(trained.models, file = 'trained_models.Rdata')
 ```
@@ -269,7 +267,7 @@ save(trained.models, file = 'trained_models.Rdata')
 
 Before applying the algorithm to the test data, let's apply it to the small dataset with all the combinations of categorical variables and visualize the predictions. This might help us develop some intuition about each algorithm.
 
-```{r}
+```{r chap07chunk20}
 pred_df <- expand.grid(ll[2:5])
 pred_df_1 <- rxPredict(trained.models$linmod, data = pred_df, predVarNames = "pred_linmod")
 pred_df_2 <- rxPredict(trained.models$dtree, data = pred_df, predVarNames = "pred_dtree")
@@ -297,7 +295,7 @@ We now apply the model to the test data so we can compare the predictive power o
 
 The first metric we look at is the average of the squared residuals, which gives us an idea of how close the predictions are to the observed values. Since we're predicting tip percent, which usually falls in a narrow range of 0 to about 20 percent, we should expect on average the residuals for a good model to be no more than 2 or 3 percentage points.
 
-```{r}
+```{r chap07chunk21}
 rxPredict(trained.models$linmod, data = mht_split$test, outData = mht_split$test, predVarNames = "tip_percent_pred_linmod", overwrite = TRUE)
 rxPredict(trained.models$dtree, data = mht_split$test, outData = mht_split$test, predVarNames = "tip_percent_pred_dtree", overwrite = TRUE)
 rxPredict(trained.models$dforest, data = mht_split$test, outData = mht_split$test, predVarNames = "tip_percent_pred_dforest", overwrite = TRUE)
@@ -311,7 +309,7 @@ rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test,
 
 Another metric worth looking at is a correlation matrix. This can help us determine to what extent the predictions from the different models are close to each other, and to what extent each is close to the actual or observed tip percent.
 
-```{r}
+```{r chap07chunk22}
 rxc <- rxCor( ~ tip_percent + tip_percent_pred_linmod + tip_percent_pred_dtree + tip_percent_pred_dforest, data = mht_split$test)
 print(rxc)
 ```
@@ -322,7 +320,7 @@ The models we built in the last section were disappointing, and the last exercis
 
 (1) Now that we used `RevoScaleR` to split the data into training and testing sets, let's go back and rebuild the three models from last section but include `payment_type` this time, in addition to all the features we used last time.
 
-```{r, eval=FALSE}
+```{r chap07chunk23, eval=FALSE}
 # we re-build the linear model without payment_type for comparison
 linmod_1 <- rxLinMod(## formula goes here
                      data = mht_split$train, reportProgress = 0)
@@ -338,7 +336,7 @@ trained.models <- list(linmod_1 = linmod_1, linmod_2 = linmod_2, dtree = dtree)
 
 (2) Here is a code to build a prediction dataset called `pred_df`. Fill in the code for predicting `payment_type` using the three models from above and attach the predictions to `pred_df` as separate columns called `pred_linmod_1`, `pred_linmod_2` and `pred_dtree`.
 
-```{r, eval=FALSE}
+```{r chap07chunk24, eval=FALSE}
 pred_df <- expand.grid(ll)
 ## predict payment_type on pred_df by each of three models
 # pred_df_1 stores predictions made by linmod_1 into a column called pred_linmod_1
@@ -350,7 +348,7 @@ head(pred_df)
 
 (3) Run your dataset against the following code snippet to produce a plot similar to the plot we examined earlier. What is different about the plot this time?
 
-```{r, eval=FALSE}
+```{r chap07chunk25, eval=FALSE}
 ggplot(data = pred_df) +
   geom_density(aes(x = pred_linmod_1, col = "linmod_1"), size = 1) +
   geom_density(aes(x = pred_linmod_2, col = "linmod_2"), size = 1) +
@@ -362,7 +360,7 @@ ggplot(data = pred_df) +
 
 (4) Extract only the necessary columns from the test data and run predictions on it. In the last section, we put the predictions directly in the test data's XDF file, but because this is an IO intensive operation, we can run it faster by using a `data.frame` instead (as long as the test data is not big enough to make us run out of memory). Use `rxPredict` to run score `test_df` with the predictions from each of the three models.
 
-```{r, eval=FALSE}
+```{r chap07chunk26, eval=FALSE}
 test_df <- rxDataStep(mht_split$test, 
   varsToKeep = c('tip_percent', 'payment_type', 'pickup_nb', 'dropoff_nb', 'pickup_hour', 'pickup_dow'), 
   maxRowsByCols = 10^9)
@@ -373,7 +371,7 @@ test_df_3 <- ## predict for the third model, call the predictions `tip_pred_dfor
 
 We can now attach models' predictions to the `test_df` and run a `rxSummary` (or any R function we like, since `test_df` is a `data.frame`) to look at the performance of the models.
 
-```{r, eval=FALSE}
+```{r chap07chunk27, eval=FALSE}
 test_df <- do.call(cbind, list(test_df, test_df_1, test_df_2, test_df_3))
 
 rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = test_df,
@@ -389,7 +387,7 @@ rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = test_df,
 
 (1) We begin by building the three models on the training data and saving the results in an `Rdata` file.
 
-```{r}
+```{r chap07chunk28}
 linmod_1 <- rxLinMod(tip_percent ~ pickup_nb:dropoff_nb + pickup_dow:pickup_hour, data = mht_split$train, reportProgress = 0)
 linmod_2 <- rxLinMod(tip_percent ~ payment_type + pickup_nb:dropoff_nb + pickup_dow:pickup_hour, data = mht_split$train, reportProgress = 0)
 dtree <- rxDTree(tip_percent ~ payment_type + pickup_nb + dropoff_nb + pickup_dow + pickup_hour, data = mht_split$train, pruneCp = "auto", reportProgress = 0)
@@ -399,7 +397,7 @@ trained.models <- list(linmod_1 = linmod_1, linmod_2 = linmod_2, dtree = dtree)
 
 (2) We can now build a prediction dataset with all the combinations of the input variables. If any of the input variables was numeric, we would have to discretize it so the dataset does not blow up in size. In our case, we don't have numeric inputs. Finally, with `do.call` we can recursively join the predictions to the original data using the `cbind` function.
 
-```{r}
+```{r chap07chunk29}
 pred_df <- expand.grid(ll)
 pred_df_1 <- rxPredict(trained.models$linmod_1, data = pred_df, predVarNames = "pred_linmod_1")
 pred_df_2 <- rxPredict(trained.models$linmod_2, data = pred_df, predVarNames = "pred_linmod_2")
@@ -410,7 +408,7 @@ head(pred_df)
 
 (3) We now feed the above data to `ggplot` to look at the distribution of the predictions made by each model. It should come as no surprise that with the inclusion of `payment_type` the predictions have a **bimodal distribution** one for trips paid in cash and one for trips paid using a card. For trips paid in cash, the actual distribution is not as important, but for trips paid using a card we can see that the random forest model makes predictions that are less spread out than the other two models.
 
-```{r}
+```{r chap07chunk30}
 ggplot(data = pred_df) +
   geom_density(aes(x = pred_linmod_1, col = "linmod_1"), size = 1) +
   geom_density(aes(x = pred_linmod_2, col = "linmod_2"), size = 1) +
@@ -422,7 +420,7 @@ ggplot(data = pred_df) +
 
 (4) We now run the predictions on the test data to evaluate each model's performance. To do so, we use `rxPredict` without the `outData` argument and make an assignment on the left side so results would go into a `data.frame`.
 
-```{r}
+```{r chap07chunk31}
 test_df <- rxDataStep(mht_split$test, varsToKeep = c('tip_percent', 'payment_type', 'pickup_nb', 'dropoff_nb', 'pickup_hour', 'pickup_dow'), maxRowsByCols = 10^9)
 test_df_1 <- rxPredict(trained.models$linmod_1, data = test_df, predVarNames = "tip_pred_linmod_1")
 test_df_2 <- rxPredict(trained.models$linmod_2, data = test_df, predVarNames = "tip_pred_linmod_2")
@@ -433,7 +431,7 @@ head(test_df)
 
 Since we have the test data in a `data.frame` we can also plot the distribution of the predictions on the test data to compare it with the last plot. As we can see, the random forest and linear model both probably waste some computation effort making predictions for trips paid in cash.
 
-```{r}
+```{r chap07chunk32}
 ggplot(data = test_df) +
   geom_density(aes(x = tip_pred_linmod_1, col = "linmod w/o payment type")) +
   geom_density(aes(x = tip_pred_linmod_2, col = "linmod w/ payment type")) +
@@ -443,7 +441,7 @@ ggplot(data = test_df) +
 
 (5) Recall from the last section that the predictions made by the three models had an average SSE of about 80. With the inclusion of `payment_type` we should see a considerable drop in this number.
 
-```{r}
+```{r chap07chunk33}
 rxSummary(~ SSE_linmod_1 + SSE_linmod_2 + SSE_dtree, data = test_df,
   transforms = list(
     SSE_linmod_1 = (tip_percent - tip_pred_linmod_1)^2,
@@ -451,7 +449,7 @@ rxSummary(~ SSE_linmod_1 + SSE_linmod_2 + SSE_dtree, data = test_df,
     SSE_dtree = (tip_percent - tip_pred_dtree)^2))
 ```
 
-```{r}
+```{r chap07chunk34}
 rxc <- rxCor( ~ tip_percent + tip_pred_linmod_1 + tip_pred_linmod_2 + tip_pred_dtree, data = test_df)
 print(rxc)
 ```

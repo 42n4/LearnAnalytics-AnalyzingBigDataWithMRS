@@ -1,10 +1,7 @@
 Preparing the data
 ================
 Seth Mottaghinejad
-2017-01-27
-
-Preparing the data
-==================
+2017-02-08
 
 Raw data is often too primitive to be used directly for analysis. After reading in the raw data, a data scientist spends a great deal of time and effort on cleaning the data and adding the features to the data that pertain to the analysis at hand. How the data needs to be cleaned is something that is partly guided by how the analysis makes business common sense and meets certain requirements, and partly by the specific analytics algorithm that it is being fed to. In other words, it is can be somewhat subjective as long as it does not makes the analysis hard to understand.
 
@@ -99,7 +96,7 @@ rxDataStep(nyc_xdf, nyc_xdf,
   overwrite = TRUE)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.434 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 4.823 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 3.879 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 4.036 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 4.100 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 4.039 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 4.437 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 4.292 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 4.160 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 4.303 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 4.356 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 4.339 seconds
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.045 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 4.539 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 3.756 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 3.806 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 4.052 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 4.032 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 3.891 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 3.851 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 3.686 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 3.848 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 3.877 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 3.914 seconds
 
 ``` r
 rxSummary( ~ tip_percent, nyc_xdf)
@@ -107,17 +104,17 @@ rxSummary( ~ tip_percent, nyc_xdf)
 
     ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.010 seconds
     ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.010 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.013 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.011 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.011 seconds
+    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.010 seconds
     ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.011 seconds
+    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.010 seconds
     ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.010 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.012 seconds
+    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.010 seconds
+    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.010 seconds
+    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.011 seconds
+    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.011 seconds
     ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.011 seconds 
-    ## Computation time: 0.138 seconds.
+    ## Computation time: 0.132 seconds.
 
     ## Call:
     ## rxSummary(formula = ~tip_percent, data = nyc_xdf)
@@ -140,8 +137,8 @@ rxSummary( ~ tip_percent2, nyc_xdf,
                                   NA)))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.168 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.167 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.222 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.174 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.380 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.122 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.148 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.135 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.133 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.138 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.160 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.123 seconds 
-    ## Computation time: 2.104 seconds.
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.163 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.159 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.214 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.161 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.368 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.118 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.136 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.132 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.126 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.133 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.141 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.117 seconds 
+    ## Computation time: 2.000 seconds.
 
     ## Call:
     ## rxSummary(formula = ~tip_percent2, data = nyc_xdf, transforms = list(tip_percent2 = ifelse(fare_amount > 
@@ -181,8 +178,8 @@ rxCrossTabs( ~ month:year, nyc_xdf,
                month = factor(month, levels = 1:12)))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 1.104 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 1.505 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 1.293 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 1.631 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 2.040 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 1.522 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 1.685 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 1.526 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 1.765 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 1.614 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 1.998 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 1.598 seconds 
-    ## Computation time: 19.615 seconds.
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 1.068 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 1.360 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 1.272 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 1.613 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 1.781 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 1.347 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 1.490 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 1.565 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 1.740 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 1.664 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 1.870 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 1.535 seconds 
+    ## Computation time: 18.614 seconds.
 
     ## Call:
     ## rxCrossTabs(formula = ~month:year, data = nyc_xdf, transforms = list(year = as.integer(substr(pickup_datetime, 
@@ -224,8 +221,8 @@ rxCrossTabs( ~ month:year, nyc_xdf,
              transformPackages = "lubridate")
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 1.946 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 2.419 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 2.178 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 2.708 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 2.550 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 2.758 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 2.874 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 3.731 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 3.125 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 3.805 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 3.106 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 3.426 seconds 
-    ## Computation time: 35.081 seconds.
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 1.908 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 2.352 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 2.140 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 2.558 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 2.448 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 2.201 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 2.632 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 2.615 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 2.236 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 2.493 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 2.188 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 2.528 seconds 
+    ## Computation time: 28.719 seconds.
 
     ## Call:
     ## rxCrossTabs(formula = ~month:year, data = nyc_xdf, transforms = list(date = ymd_hms(pickup_datetime), 
@@ -343,7 +340,7 @@ We run one last test before applying the transformation. Recall that `rxDataStep
 head(rxDataStep(nyc_sample, transformFunc = xforms, transformPackages = "lubridate"))
 ```
 
-    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.030 seconds
+    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.028 seconds
 
     ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
     ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20
@@ -389,13 +386,13 @@ rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE, transformFunc = xforms,
            transformPackages = "lubridate")
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 10.076 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 9.501 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 8.524 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 9.611 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 8.092 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 8.175 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 8.642 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 9.025 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 9.003 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 10.194 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 10.328 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 10.149 seconds
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 6.303 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.200 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 5.893 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 6.063 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 6.035 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 5.934 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 5.919 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 6.021 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 6.016 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 5.956 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 5.792 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 5.819 seconds
 
 ``` r
 Sys.time() - st
 ```
 
-    ## Time difference of 1.871441 mins
+    ## Time difference of 1.213235 mins
 
 Examining the new columns
 -------------------------
@@ -412,18 +409,18 @@ rxs1 <- rxSummary( ~ pickup_hour + pickup_dow + trip_duration, nyc_xdf)
 ```
 
     ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.028 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.033 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.038 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.031 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.033 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.033 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.031 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.029 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.027 seconds
+    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.025 seconds
+    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.025 seconds
+    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.024 seconds
+    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.025 seconds
     ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.029 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.031 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.028 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.033 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.033 seconds 
-    ## Computation time: 0.406 seconds.
+    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.026 seconds
+    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.025 seconds
+    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.027 seconds
+    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.029 seconds 
+    ## Computation time: 0.342 seconds.
 
 ``` r
 # we can add a column for proportions next to the counts
@@ -480,18 +477,18 @@ rxs2 <- rxSummary( ~ pickup_dow:pickup_hour, nyc_xdf)
 ```
 
     ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.013 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.020 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.020 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.023 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.026 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.022 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.019 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.021 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.018 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.019 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.021 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.025 seconds 
-    ## Computation time: 0.272 seconds.
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.017 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.022 seconds
+    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.017 seconds
+    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.017 seconds
+    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.020 seconds
+    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.020 seconds
+    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.025 seconds
+    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.017 seconds
+    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.017 seconds
+    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.020 seconds
+    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.018 seconds 
+    ## Computation time: 0.242 seconds.
 
 ``` r
 rxs2 <- tidyr::spread(rxs2$categorical[[1]], key = 'pickup_hour', value = 'Counts')
@@ -516,7 +513,7 @@ levelplot(prop.table(rxs2, 2), cuts = 4, xlab = "", ylab = "",
           main = "Distribution of taxis by day of week")
 ```
 
-![](images/unnamed-chunk-12-1.png)
+![](rendered/images/chap03chunk13-1.png)
 
 Interesting results manifest themselves in the above plot:
 
@@ -559,7 +556,7 @@ library(ggrepel)
   geom_text_repel(aes(label = id), data = mht.cent, size = 3)
 ```
 
-![](images/unnamed-chunk-13-1.png)
+![](rendered/images/chap03chunk14-1.png)
 
 ### Exercises
 
@@ -652,7 +649,7 @@ head(rxDataStep(nyc_sample,
                 transformObjects = list(shapefile = mht_shapefile)))
 ```
 
-    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.007 seconds
+    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.004 seconds
 
     ## NULL
 
@@ -675,7 +672,7 @@ rxDataStep(nyc_xdf, nyc_xdf,
   overwrite = TRUE)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 8.127 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 5.725 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 6.488 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 6.801 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 7.201 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 7.704 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 6.900 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 7.606 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 7.323 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 6.697 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 7.163 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 7.671 seconds
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 4.068 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 3.466 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 3.839 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 3.946 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 4.233 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 4.032 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 4.148 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 3.943 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 4.235 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 3.963 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 5.526 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 4.822 seconds
 
 1.  Because we want to apply the transformation to the large data `nyc_xdf`, we need to make sure that we don't add unnecessary columns and that the columns have the appropriate types.
 
@@ -730,7 +727,7 @@ head(rxDataStep(nyc_sample, transformFunc = find_nhoods,
                 transformObjects = list(shapefile = nyc_shapefile)))
 ```
 
-    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.154 seconds
+    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.073 seconds
 
     ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
     ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20
@@ -799,13 +796,13 @@ rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE,
            transformObjects = list(shapefile = nyc_shapefile))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 22.568 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 23.750 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 21.612 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 21.330 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 20.358 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 20.265 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 23.150 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 21.884 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 22.240 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 23.996 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 24.010 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 23.048 seconds
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 13.456 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 13.644 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 13.139 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 12.309 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 12.975 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 11.957 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 13.224 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 12.414 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 13.283 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 13.383 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 14.519 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 13.456 seconds
 
 ``` r
 Sys.time() - st
 ```
 
-    ## Time difference of 4.515362 mins
+    ## Time difference of 2.6505 mins
 
 ``` r
 rxGetInfo(nyc_xdf, numRows = 5)

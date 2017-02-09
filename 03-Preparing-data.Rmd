@@ -5,11 +5,9 @@ output: github_document
 date: "`r Sys.Date()`"
 ---
 
-```{r setup, include=FALSE}
+```{r chap03chunk01, include=FALSE}
 source('setup.R')
 ```
-
-# Preparing the data
 
 Raw data is often too primitive to be used directly for analysis. After reading in the raw data, a data scientist spends a great deal of time and effort on cleaning the data and adding the features to the data that pertain to the analysis at hand. How the data needs to be cleaned is something that is partly guided by how the analysis makes business common sense and meets certain requirements, and partly by the specific analytics algorithm that it is being fed to. In other words, it is can be somewhat subjective as long as it does not makes the analysis hard to understand.
 
@@ -31,7 +29,7 @@ After reading this chapter, we will understand how to
 
 It's a good idea to check our column types and make sure nothing strange stands out. In addition to column types, the `rxGetInfo` function also shows lows and highs for numeric columns, which can be useful for identifying outliers or running sanity checks. With the `numRows = 5` argument, we can look at the first 5 rows of the data as well.
 
-```{r}
+```{r chap03chunk02}
 rxGetInfo(nyc_xdf, getVarInfo = TRUE, numRows = 5)
 ```
 
@@ -49,7 +47,7 @@ In a local compute context, when we run `rxDataStep`, we specify an `inData` arg
 
 Let's start with a simple transformation for calculating tip percentage.
 
-```{r}
+```{r chap03chunk03}
 rxDataStep(nyc_xdf, nyc_xdf,
   transforms = list(
     tip_percent = ifelse(fare_amount > 0 & tip_amount < fare_amount, 
@@ -61,7 +59,7 @@ rxSummary( ~ tip_percent, nyc_xdf)
 
 The above transformation was persisted in the data. In other words, there's is now a new column in the data called `tip_percent`. Such a transformation has IO overhead when the data is stored on disk. An alternative approach is to perform the transformation *on the fly* by putting the `transforms` argument directly inside of the `rxSummary` call instead of in a prior `rxDataStep` call. In this case, we don't pay the IO overhead of writing to data on disk.
 
-```{r}
+```{r chap03chunk04}
 rxSummary( ~ tip_percent2, nyc_xdf,
            transforms = list(
             tip_percent2 = ifelse(fare_amount > 0 & tip_amount < fare_amount, 
@@ -85,7 +83,7 @@ We can use the `rxCrossTabs` function to get counts for the number of trips per 
 
 (1) We use `substr` to extract the year and month form `pickup_datetime` and convert them to factors. We can specify any range of values as `levels`, not just what we expect in the data.
 
-```{r}
+```{r chap03chunk05}
 rxCrossTabs( ~ month:year, nyc_xdf,
              transforms = list(
                year = as.integer(substr(pickup_datetime, 1, 4)),
@@ -96,7 +94,7 @@ rxCrossTabs( ~ month:year, nyc_xdf,
 
 (2) In this case we first convert `pickup_datetime` form `character` to `datetime` and then extract year and month. Because we're using the `lubridate` package we specify this using the `transformPackages` argument. Note that we can't just put `library(lubridate)` at the top, becuase `rxCrossTabs` is a `RevoScaleR` function and as such it can run not just locally, but also in remote compute contexts where the `lubridate` package will have to be loaded before it can execute.
 
-```{r}
+```{r chap03chunk06}
 rxCrossTabs( ~ month:year, nyc_xdf,
              transforms = list(
                date = ymd_hms(pickup_datetime),
@@ -113,7 +111,7 @@ In the last part `rxDataStep` was introduced to perform a simple one-liner trans
 
 For the NYC Taxi data, we are interested in comparing trips based on day of week and the time of day. Those two columns do not exist yet, but we can extract them from pick-up date and time and drop-off date and time. To extract the above features, we use the `lubridate` package, which has useful functions for dealing with date and time columns. To perform these transformations, we use a transformation function called `xforms`.
 
-```{r}
+```{r chap03chunk07}
 # transformation function for extracting some date and time features
 xforms <- function(data) {
   
@@ -144,7 +142,7 @@ xforms <- function(data) {
 
 Before we apply the transformation to the data, it's usually a good idea to test it and make sure it's working. We set aside a sample of the data as a `data.frame` for this purpose. Running the transformation function on `nyc_sample` should return the original data with the new columns.
 
-```{r}
+```{r chap03chunk08}
 library(lubridate)
 Sys.setenv(TZ = "US/Eastern") # not important for this dataset
 head(xforms(nyc_sample)) # test the function on a data.frame
@@ -152,13 +150,13 @@ head(xforms(nyc_sample)) # test the function on a data.frame
 
 We run one last test before applying the transformation. Recall that `rxDataStep` works with a `data.frame` input too, and that leaving the `outFile` argument means we return a `data.frame`. So we can perform the above test with `rxDataStep` by passing transformation function to `transformFunc` and specifying the required packages in `transformPackages`.
 
-```{r}
+```{r chap03chunk09}
 head(rxDataStep(nyc_sample, transformFunc = xforms, transformPackages = "lubridate"))
 ```
 
 Everything seems to be working well. This does not guarantee that running the transformation function on the whole dataset will succeed, but it makes it less likely to fail for the wrong reasons. If the transformation works on the sample `data.frame`, as it does above, but fails when we run it on the whole dataset, then it is usually because of something in the dataset that causes it to fail (such as missing values) that was not present in the sample data. We now run the transformation on the whole data set.
 
-```{r}
+```{r chap03chunk10}
 st <- Sys.time()
 rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE, transformFunc = xforms, 
            transformPackages = "lubridate")
@@ -174,7 +172,7 @@ Let's examine the new columns we created to make sure the transformation more or
 
 We use the same _formula notation_ used by many other R modeling or plotting functions to specify which columns we want summaries for. For example, here we want to see summaries for `pickup_hour` and `pickup_dow` \(both factors\) and `trip_duration` \(numeric, in seconds\).
 
-```{r}
+```{r chap03chunk11}
 rxs1 <- rxSummary( ~ pickup_hour + pickup_dow + trip_duration, nyc_xdf)
 # we can add a column for proportions next to the counts
 rxs1$categorical <- lapply(rxs1$categorical, 
@@ -184,7 +182,7 @@ rxs1
 
 Separating two variables by a colon \(`pickup_dow:pickup_hour`\) instead of a plus sign \(`pickup_dow + pickup_hour`\) allows us to get summaries for each combination of the levels of the two factor columns, instead of individual ones.
 
-```{r}
+```{r chap03chunk12}
 rxs2 <- rxSummary( ~ pickup_dow:pickup_hour, nyc_xdf)
 rxs2 <- tidyr::spread(rxs2$categorical[[1]], key = 'pickup_hour', value = 'Counts')
 row.names(rxs2) <- rxs2[ , 1]
@@ -194,7 +192,7 @@ rxs2
 
 In the above case, the individual counts are not as helpful to us as proportions from those counts, and for comparing across different days of the week, we want the proportions to be based on totals for each column, not the entire table. We ask for proportions based on column totals by passing the 2 to as second argument to the `prop.table` function. We can also visually display the proportions using the `levelplot` function.
 
-```{r}
+```{r chap03chunk13}
 levelplot(prop.table(rxs2, 2), cuts = 4, xlab = "", ylab = "", 
           main = "Distribution of taxis by day of week")
 ```
@@ -211,7 +209,7 @@ We now add another set of features to the data: pickup and drop-off neighborhood
 
 We begin by plotting a map of Manhattan neighborhoods, so we can see the neighborhood boundaries and familiarize ourselves with their names. The details of how the plot below was generated is beyond the discussion of this course, and we recommend checking the documentation for the `maptools` library for more details.
 
-```{r}
+```{r chap03chunk14}
 library(rgeos)
 library(maptools)
 
@@ -253,7 +251,7 @@ To add pick-up neighborhood columns to `nyc_sample`, we need to do as follows:
 - use the `over` function to get neighborhoods based on the coordinates specified above, which returns a `data.frame` with neighborhood information
 - attach the results to the original data using `cbind` after giving them relevant column names
 
-```{r}
+```{r chap03chunk15}
 # take only the coordinate columns, and replace NAs with 0
 data_coords <- data.frame(
   long = ifelse(is.na(nyc_sample$pickup_longitude), 0, nyc_sample$pickup_longitude),
@@ -278,7 +276,7 @@ In order to run the above transformation on the whole data, we need to take the 
 
 (3) We call the transformation function `find_nhoods`. There are hints in the code below to help you figure out the various steps needed for the function to return the expected results. Based on the above examples, fill in the code to add the pick-up and drop-off neighborhood columns to the data.
 
-```{r}
+```{r chap03chunk16}
 find_nhoods <- function(data) {
   # extract pick-up lat and long and find their neighborhoods
   # add only the pick-up neighborhood and city columns to the data
@@ -290,7 +288,7 @@ find_nhoods <- function(data) {
 
 Now that we've got our function, it's time to test it. We can do so by running `rxDataStep` on the sample data `nyc_sample`. This is a good way to make sure the transformation works before we run it on the large XDF file `nyc_xdf`. Sometimes errors messages we get are more informative when we apply the transformation to a `data.frame`, and it's easier to trace it back and debug it. So here we use `rxDataStep` and feed it `nyc_sample` (with no `outFile` argument) to see what the data looks like after applying the transformation function `find_nhoods` to it.
 
-```{r}
+```{r chap03chunk17}
 # test the function on a data.frame using rxDataStep
 head(rxDataStep(nyc_sample, 
                 transformFunc = find_nhoods, 
@@ -304,7 +302,7 @@ head(rxDataStep(nyc_sample,
 
 (1) `rate_code_id` is an `integer` column, so we need to use `as.factor` to covert it into a factor. When converting a column from one type to another, we often cannot overwrite the existing column and must create a new column instead. This is because of how the data is broken up into chunks and by converting a column from one type to another, we get a mismatch between chunks. `payment_type` is already a factor and so it doesn't need to be converted to one. When specifying the levels for `payment_type`, we can limit them to 1 and 2 (corresponding to card and cash) and all other levels wills automatically become NAs.
 
-```{r}
+```{r chap03chunk18}
 rxDataStep(nyc_xdf, nyc_xdf,
   transforms = list(
     rate_code_id = as.factor(rate_code_id),
@@ -319,7 +317,7 @@ rxDataStep(nyc_xdf, nyc_xdf,
 
 (2) Because we want to apply the transformation to the large data `nyc_xdf`, we need to make sure that we don't add unnecessary columns and that the columns have the appropriate types.
 
-```{r}
+```{r chap03chunk19}
 nhoods <- over(data_coords, mht_shapefile)
 str(nhoods)
 ```
@@ -328,7 +326,7 @@ The shapefile contains a few columns we don't need. The neighborhood column is c
 
 (3) There is more than a single correct solution in this case, but here's one that works.
 
-```{r}
+```{r chap03chunk20}
 find_nhoods <- function(data) {
   # extract pick-up lat and long and find their neighborhoods
   pickup_longitude <- ifelse(is.na(data$pickup_longitude), 0, data$pickup_longitude)
@@ -355,7 +353,7 @@ find_nhoods <- function(data) {
 
 (4) We can test the above function on the sample data to make sure it works.
 
-```{r}
+```{r chap03chunk21}
 # test the function on a data.frame using rxDataStep
 head(rxDataStep(nyc_sample, transformFunc = find_nhoods, 
                 transformPackages = c("sp", "maptools"), 
@@ -370,7 +368,7 @@ We now write a transformation function, `find_nhoods`, that will find the corres
 
 Since we tested the function in the prior exercise and everything went well, we can now apply the transformation to the whole data and reasonably expect that it should work.
 
-```{r}
+```{r chap03chunk22}
 st <- Sys.time()
 rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE, 
            transformFunc = find_nhoods, 

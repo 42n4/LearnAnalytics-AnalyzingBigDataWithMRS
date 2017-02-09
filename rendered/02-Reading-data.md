@@ -1,10 +1,7 @@
 Reading the data
 ================
 Seth Mottaghinejad
-2017-01-27
-
-Reading the data
-================
+2017-02-08
 
 An analysis usually begin with a question we're trying to answer, after which we gather any data that can help us answer it. There are also times when we start with data we've collected and instead of trying to answer a specific question, we explore the data in search of not-so-obvious trends. This is sometimes referred to as **exploratory data analysis** and it can be a great way to help determine what sorts of questions the data can answer.
 
@@ -112,30 +109,30 @@ for(ii in 1:6) { # get each month's data and append it to the first month's data
 }
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 7.426 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 9.001 seconds 
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 6.110 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.266 seconds 
     ## [1] "C:/Data/NYC_taxi/yellow_tripsample_2016-06.csv"
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 6.319 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.773 seconds 
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.684 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.432 seconds 
     ## [1] "C:/Data/NYC_taxi/yellow_tripsample_2016-05.csv"
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 6.159 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 10.087 seconds 
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.684 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 5.848 seconds 
     ## [1] "C:/Data/NYC_taxi/yellow_tripsample_2016-04.csv"
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 7.458 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.626 seconds 
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 6.207 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.746 seconds 
     ## [1] "C:/Data/NYC_taxi/yellow_tripsample_2016-03.csv"
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 8.595 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 7.480 seconds 
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.681 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 5.936 seconds 
     ## [1] "C:/Data/NYC_taxi/yellow_tripsample_2016-02.csv"
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 7.328 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.090 seconds 
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.951 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 5.819 seconds 
     ## [1] "C:/Data/NYC_taxi/yellow_tripsample_2016-01.csv"
 
 ``` r
 Sys.time() - st # stores the time it took to import
 ```
 
-    ## Time difference of 1.540285 mins
+    ## Time difference of 1.25193 mins
 
 XDF vs CSV
 ----------
@@ -155,22 +152,22 @@ nyc_xdf <- RxXdfData(input_xdf)
 system.time(rxsum_xdf <- rxSummary( ~ fare_amount, nyc_xdf))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.012 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.012 seconds
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.012 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.013 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.011 seconds
+    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.011 seconds
     ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.012 seconds
+    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.011 seconds
     ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.012 seconds
     ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.012 seconds
+    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.011 seconds
     ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.012 seconds
     ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.011 seconds
     ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.011 seconds 
-    ## Computation time: 0.145 seconds.
+    ## Computation time: 0.148 seconds.
 
     ##    user  system elapsed 
-    ##    0.01    0.00    0.15
+    ##    0.02    0.00    0.17
 
 ``` r
 rxsum_xdf
@@ -197,12 +194,12 @@ nyc_csv <- RxTextData(input_csv, colClasses = col_classes)
 system.time(rxsum_csv <- rxSummary( ~ fare_amount, nyc_csv))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 1.673 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 1.698 seconds 
-    ## Computation time: 3.379 seconds.
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 1.644 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 1.654 seconds 
+    ## Computation time: 3.306 seconds.
 
     ##    user  system elapsed 
-    ##    0.02    0.00    4.02
+    ##    0.00    0.00    3.89
 
 ``` r
 rxsum_csv
@@ -267,17 +264,17 @@ st <- Sys.time()
 rxImport(input_csv, input_xdf, colClasses = col_classes, overwrite = TRUE)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 6.552 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.310 seconds
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 6.013 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.706 seconds
 
 ``` r
 jan_2016_xdf <- RxXdfData(input_xdf)
 sum_xdf <- rxSummary( ~ ., jan_2016_xdf)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.461 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.514 seconds 
-    ## Computation time: 1.310 seconds.
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.433 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.449 seconds 
+    ## Computation time: 1.165 seconds.
 
 ``` r
 rt_xdf <- Sys.time() - st # runtime for XDF file
@@ -295,14 +292,14 @@ jan_2016_csv <- RxTextData(input_csv, colClasses = col_classes)
 sum_csv <- rxSummary( ~ ., jan_2016_csv)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.464 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 5.279 seconds 
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 4.887 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 5.062 seconds 
     ## 
-    ## Elapsed time to compute low/high values and/or factor levels: 10.762 secs.
+    ## Elapsed time to compute low/high values and/or factor levels: 9.967 secs.
     ##  
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.926 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 5.302 seconds 
-    ## Computation time: 11.665 seconds.
+    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 4.905 seconds
+    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 4.952 seconds 
+    ## Computation time: 10.277 seconds.
 
 ``` r
 rt_csv <- Sys.time() - st # runtime for CSV file
@@ -314,7 +311,7 @@ rt_csv <- Sys.time() - st # runtime for CSV file
 rt_xdf - rt_csv
 ```
 
-    ## Time difference of -8.185538 secs
+    ## Time difference of -6.272765 secs
 
 We can see that the XDF conversion and subsequent summary was still faster than summarizing the CSV file. This is because summarizing the XDF file considerably faster, making up for conversion time. Since our results are I/O dependent, they will depend on our hard drive's infrastructure.
 

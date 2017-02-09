@@ -5,11 +5,9 @@ output: github_document
 date: "`r Sys.Date()`"
 ---
 
-```{r setup, include=FALSE}
+```{r chap06chunk01, include=FALSE}
 source('setup.R')
 ```
-
-# Neighborhood patterns
 
 As our next task, we seek to find patterns between pickup and drop-off neighborhoods and other variables such as fare amount, trip distance, traffic and tipping. Since ultimately `RevoScaleR` is just another R package, it's important to know that to really put it to use, it must integrate and interact with other R packages to make our analysis possible. We've already seen examples of how to use packages such as `lubridate` or `rgeos` for data transformations with `RevoScaleR`, and how to use results returned by `rxSummary` or `rxCrossTabs` and pass them to other R functions. Sometimes, in the process of examining our results, we notice certain attributes about the data that need to be re-examined.
 
@@ -29,7 +27,7 @@ For this analysis, we use the `rxCube` and `rxCrossTabs` are both very similar t
 
 Let's see what this means in action: We start by using `rxCrossTabs` to get sums and counts for `trip_distance`, broken up by `pickup_nb` and `dropoff_nb`. We can immediately divide the sums by the counts to get averages. The result is called a **distance matrix** and can be fed to the `seriate` function in the `seriation` library to order it so closer neighborhoods appear next to each other (right now neighborhoods are sorted alphabetically, which is what R does by default with factor levels unless otherwise specified).
 
-```{r}
+```{r chap06chunk02}
 rxct <- rxCrossTabs(trip_distance ~ pickup_nb:dropoff_nb, mht_xdf)
 res <- rxct$sums$trip_distance / rxct$counts$trip_distance
 
@@ -40,7 +38,7 @@ nb_order <- seriate(res)
 
 We will use `nb_order` in a little while, but before we do so, let's use `rxCube` to get counts and averages for `trip_distance`, a new data point representing minutes spent in the taxi per mile of the trip, and `tip_percent`. In the above example, we used `rxCrossTabs` because we wanted a matrix as the return object, so we could feed it to `seriate`. We now use `rxCube` to get a `data.frame` instead, since we intend to use it for plotting with `ggplot2`, which is more easier to code using a long `data.frame` as input compared to a wide `matirx`.
 
-```{r}
+```{r chap06chunk03}
 rxc1 <- rxCube(trip_distance ~ pickup_nb:dropoff_nb, mht_xdf)
 rxc2 <- rxCube(minutes_per_mile ~ pickup_nb:dropoff_nb, mht_xdf, 
                transforms = list(minutes_per_mile = (trip_duration/60)/trip_distance))
@@ -53,7 +51,7 @@ head(res)
 
 We can start plotting the above results to see some interesting trends.
 
-```{r}
+```{r chap06chunk04}
 library(ggplot2)
 ggplot(res, aes(pickup_nb, dropoff_nb)) +
   geom_tile(aes(fill = trip_distance), colour = "white") +
@@ -64,7 +62,7 @@ ggplot(res, aes(pickup_nb, dropoff_nb)) +
 
 The problem with the above plot is the order of the neighborhoods (which is alphabetical), which makes the plot somewhat arbitrary and useless. But as we saw above, using the `seriate` function we found a more natural ordering for the neighborhoods, so we can use it to reorder the above plot in a more suitable way. To reorder the plot, all we need to do is reorder the factor levels in the order given by `nb_order`.
 
-```{r}
+```{r chap06chunk05}
 newlevs <- levels(res$pickup_nb)[unlist(nb_order)]
 res$pickup_nb <- factor(res$pickup_nb, levels = unique(newlevs))
 res$dropoff_nb <- factor(res$dropoff_nb, levels = unique(newlevs))
@@ -80,7 +78,7 @@ ggplot(res, aes(pickup_nb, dropoff_nb)) +
 
 Since trip distances remain fix, but trip duration mostly is a function of how much traffic there is, we can plot a look at the same plot as the above, but for the `minutes_per_mile` column, which will give us an idea of which neighborhoods have the most traffic between them.
 
-```{r}
+```{r chap06chunk06}
 ggplot(res, aes(pickup_nb, dropoff_nb)) +
   geom_tile(aes(fill = minutes_per_mile), colour = "white") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
@@ -90,7 +88,7 @@ ggplot(res, aes(pickup_nb, dropoff_nb)) +
 
 Another interesting question to consider is the relationship between the fare amount and how much passengers tip in relation to which neighborhoods they travel between. We create another plot similar to the ones above, showing fare amount on a gray background color scale, and displaying how much passengers tipped on average for the trip. To make it easier to visually see patterns in tipping behavior, we color-code the average tip based on some predetermined cut-offs.
 
-```{r}
+```{r chap06chunk07}
 res %>%
   mutate(tip_color = cut(tip_percent, c(0, 8, 12, 15, 100))) %>%
   ggplot(aes(pickup_nb, dropoff_nb)) +
@@ -115,7 +113,7 @@ We changed the order of the factor levels for `pickup_nb` and `dropoff_nb` to dr
 2. We can use the `rxFactor` function and its `factorInfo` to manipulate the factors levels. The advantage of `rxFactors` is that it is faster, because it works at the meta-data level. The disadvantage is that it may not work in other compute contexts such as Hadoop or Spark.
 Both ways of doing this are shown here.
 
-```{r}
+```{r chap06chunk08}
 # first way of reordering the factor levels
 rxDataStep(inData = mht_xdf, outFile = mht_xdf, 
 	transforms = list(
@@ -124,7 +122,7 @@ rxDataStep(inData = mht_xdf, outFile = mht_xdf,
 	transformObjects = list(newlevels = unique(newlevs)), overwrite = TRUE)
 ```
 
-```{r, eval=FALSE}
+```{r chap06chunk09, eval=FALSE}
 # second way of reordering the factor levels
 rxFactors(mht_xdf, outFile = mht_xdf, 
 	factorInfo = list(
@@ -142,7 +140,7 @@ Let's focus our attention now the following important questions:
 
 To answer the above questions, we need to find the distribution (or proportion) of trips between any two neighborhoods, first as a percentage of total trips, then as a percentage of trips *leaving from* a particular neighborhood, and finally as a percentage of trips *going to* a particular neighborhood.
 
-```{r}
+```{r chap06chunk10}
 rxc <- rxCube( ~ pickup_nb:dropoff_nb, mht_xdf)
 rxc <- as.data.frame(rxc)
 
@@ -163,7 +161,7 @@ Based on the first row, we can see that trips from the Upper East Side to the Up
 
 We can take the above numbers and display them in plots that make it easier to digest it all at once. We begin with a plot showing how taxi trips between any pair of neighborhoods are distributed.
 
-```{r}
+```{r chap06chunk11}
 ggplot(rxcs, aes(pickup_nb, dropoff_nb)) +
   geom_tile(aes(fill = pct_all), colour = "white") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
@@ -175,7 +173,7 @@ The plot shows that trips to and from the Upper East Side make up the majority o
 
 Next we look at how trips leaving a particular neighborhood (a point on the x-axis in the plot below), "spill out" into other neighborhoods (shown by the vertical color gradient along the y-axis at each point on the x-axis).
 
-```{r}
+```{r chap06chunk12}
 ggplot(rxcs, aes(pickup_nb, dropoff_nb)) +
   geom_tile(aes(fill = pct_by_pickup_nb), colour = "white") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
@@ -187,7 +185,7 @@ We can see how most downtown trips are to other downtown neighborhoods or to mid
 
 For a trip ending at a particular neighborhood (represented by a point on the y-axis) we now look at the distribution of where the trip originated from (the horizontal color-gradient along the x-axis for each point on the y-axis).
 
-```{r}
+```{r chap06chunk13}
 ggplot(rxcs, aes(pickup_nb, dropoff_nb)) +
   geom_tile(aes(fill = pct_by_dropoff_nb), colour = "white") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
@@ -201,7 +199,7 @@ As we can see, a lot of trips claim Midtown regardless of where they ended. The 
 
 Let's return to one of the questions we asked in the last section: Assuming that a traveler leaves from a given neighborhood, which neighborhoods are they most likely to go to? To answer this question, in we obtained the proportion of trips that fan out into all the different neighborhoods, given that they all start from the same neighborhood. The results are stored in the `rxcs` data. If we sort the data and keep only the relevant columns, it's easier to make sense of it:
 
-```{r}
+```{r chap06chunk14}
 rxcs %>%
   select(pickup_nb, dropoff_nb, pct = pct_by_pickup_nb) %>%
   arrange(pickup_nb, desc(pct))
@@ -220,7 +218,7 @@ For example, for Chinatown we should only see the top 6 neighborhoods, because e
 
 We use `rxDataStep` along with the `rowSelection` argument to do this, and since we're not specifying the `outFile` argument, our result goes into a `data.frame` which we will call `pickup_df`. We can hard-code this easily, but we want to make the code more dynamic, so that we only choose a neighborhood at the top and let the rest follow. Here's some code to get us started. We can modify it to make it work. As it turns out, if we need to pass any R objects to `rowSelection`, we can do so using the `transformObjects` argument.
 
-```{r, eval=FALSE}
+```{r chap06chunk15, eval=FALSE}
 nb_name <- "West Village" # a neighborhood of our choosing
 nb_drop <- ## pull the most common destinations for this neighborhood from `rxcs_tops`
 
@@ -233,7 +231,7 @@ pickup_df <- rxDataStep(mht_xdf, # we leave out outFile and store results in pic
 
 (3) Let's now look at a stacked bar plot showing the number of drop-offs that happened from West Village into each of its top destination neighborhoods hour by hour. Modify this code so that instead of a stacked bar plot showing the counts (frequencies) of trips in the y-axis, it shows the proportions (relative frequencies) of each destination for that hour, and adds up to 100% for each hour.
 
-```{r, eval=FALSE}
+```{r chap06chunk16, eval=FALSE}
 library(lubridate)
 pickup_df %>%
   mutate(pickup_hour = hour(ymd_hms(pickup_datetime, tz = "UTC"))) %>%
@@ -246,7 +244,7 @@ pickup_df %>%
 
 (1) The easiest way to get the cumulative sum is using the built-in `cumsum` function, but we need to group the data by `pickup_nb` before applying it. Finally, we use `filter` to get on the top destination neighborhoods. The condition `pct > 5` will give us only those neighborhoods that are a destination at least 5% of the time, and the condition `(cumpct <= 50 | (cumpct > 50 & lag(cumpct) <= 50))` will stop us once the destinations together account for more than 50 percent of trips.
 
-```{r}
+```{r chap06chunk17}
 rxcs %>%
   select(pickup_nb, dropoff_nb, pct = pct_by_pickup_nb) %>%
   arrange(pickup_nb, desc(pct)) %>%
@@ -258,7 +256,7 @@ rxcs %>%
 
 (2) We can use `subset` to extract the top drop-off neighborhoods for a given pick-up neighborhood. We use `drop = TRUE` the results into a vector. In the `rxDataStep` call, we can pass the two objects `nb_name` and `nb_drop` to the `rowSelection` argument by using `transformObjects` which is simply a *named list*. One quirk that we must be aware of here is that the objects (`nb_name` and `nb_drop`) must be renamed and the new names (`nb` and `top_drop_for_nb` respectively) go into `rowSelection`.
 
-```{r}
+```{r chap06chunk18}
 nb_name <- "West Village"
 nb_drop <- subset(rxcs_tops, pickup_nb == nb_name, select = "dropoff_nb", drop = TRUE)
 
@@ -270,7 +268,7 @@ pickup_df <- rxDataStep(mht_xdf,
 
 (3) We simply need to change `position = "stack"` to `position = "fill"`. However, since the y-axis is mislabeled, we use `scale_y_continuous(labels = percent_format())` and `ylab("percent")` to properly format and label the y-axis.
 
-```{r}
+```{r chap06chunk19}
 library(scales)
 library(lubridate)
 pickup_df %>%
@@ -286,7 +284,7 @@ pickup_df %>%
 
 We've so far only focus on spatial patterns, i.e. between the various neighborhoods. Let's now see what sorts of insights can be derived from temporal columns we extracted from the data, namely the day of the week and the hour the traveler was picked up.
 
-```{r}
+```{r chap06chunk20}
 res1 <- rxCube(tip_percent ~ pickup_dow:pickup_hour, mht_xdf)
 res2 <- rxCube(fare_amount/(trip_duration/60) ~ pickup_dow:pickup_hour, mht_xdf)
 names(res2)[3] <- 'fare_per_minute'
