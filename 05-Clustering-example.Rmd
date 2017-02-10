@@ -5,11 +5,9 @@ output: github_document
 date: "`r Sys.Date()`"
 ---
 
-```{r setup, include=FALSE}
+```{r chap05chunk01, include=FALSE}
 source('setup.R')
 ```
-
-# Clustering example
 
 Many times we don't necessarily have to resort to using the whole dataset to extract insights from the data. In other words, we really only have a big data problem when using the whole dataset versus a much smaller sample of the data can make a big difference in insight. Even when we do have a big data problem, sampling can be an effective way to gain some preliminary insights into the problem or to speed up the algorithm.
 
@@ -24,7 +22,7 @@ In this chapter, we learn how to
 
 We now narrow our field of vision by focusing on trips that took place inside of Manhattan only, and meet "reasonable" criteria for a trip. Since we added new features to the data, we can also drop some old columns from the data so that the data can be processed faster.
 
-```{r}
+```{r chap05chunk02}
 input_xdf <- file.path(data_dir, 'yellow_tripdata_2016_clean.xdf')
 mht_xdf <- RxXdfData(input_xdf)
 
@@ -45,7 +43,7 @@ rxDataStep(nyc_xdf, mht_xdf,
 
 And since we limited the scope of the data, it might be a good idea to create a sample of the new data (as a `data.frame`). Our last sample, `nyc_sample` was not a good sample, since we only took the top 1000 rows of the data. This time, we use `rxDataStep` to create a random sample of the data, containing only 1 percent of the rows from the larger dataset.
 
-```{r}
+```{r chap05chunk03}
 mht_sample <- rxDataStep(mht_xdf, rowSelection = (u < .01), transforms = list(u = runif(.rxNumRows)))
 
 dim(mht_sample)
@@ -56,7 +54,7 @@ dim(mht_sample)
 
 We can use the `ggmap` package to visually inspect the sample data. If we zoom in enough on a particular neighborhood, we can start seeing certain areas where passengers tend of get off often.
 
-```{r}
+```{r chap05chunk04}
 library(ggmap)
 map_13 <- get_map(location = c(lon = -73.98, lat = 40.76), zoom = 13)
 map_14 <- get_map(location = c(lon = -73.98, lat = 40.76), zoom = 14)
@@ -80,7 +78,7 @@ grid.arrange(q1, q2, ncol = 2)
 
 If the above plots seem too crowded, as an alternative, we could use **k-means clustering** to cluster the data based on longitude and latitude, which we would have to rescale so they have the same influence on the clusters (a simple way to rescale them is to divide longitude by -74 and latitude by 40). Once we have the clusters, we can plot the cluster **centroids** on the map instead of the individual data points that comprise each cluster.
 
-```{r}
+```{r chap05chunk05}
 library(dplyr)
 xydata <- transmute(mht_sample, 
                     long_std = dropoff_longitude / -74, 
@@ -100,7 +98,7 @@ head(centroids_sample)
 
 In the above code chunk we used the `kmeans` function to cluster the sample dataset `mht_sample`. In `RevoScaleR`, there is a counterpart to the `kmeans` function called `rxKmeans`, but in addition to working with a `data.frame`, `rxKmeans` also works with XDF files. We can therefore use `rxKmeans` to create clusters from the whole data instead of the sample represented by `mht_sample`.
 
-```{r}
+```{r chap05chunk06}
 start_time <- Sys.time()
 rxkm <- rxKmeans( ~ long_std + lat_std, data = mht_xdf, outFile = mht_xdf, 
                  outColName = "dropoff_cluster", centers = rxkm_sample$centers, 
@@ -119,7 +117,7 @@ head(clsdf)
 
 With a little bit of work, we can extract the cluster centroids from the resulting object and plot them on a similar map. As we can see, the results are not very different, however differences do exist and depending on the use case, such small differences can have a lot of practical significance. If for example we wanted to find out which spots taxis are more likely to drop off passengers and make it illegal for street vendors to operate at those spots (in order to avoid creating too much traffic), we can do a much better job of narrowing down the spots using the clusters created from the whole data.
 
-```{r}
+```{r chap05chunk07}
 centroids_whole <- cbind(transmute(as.data.frame(rxkm$centers), 
                                    long = long_std*(-74), lat = lat_std*40), 
                          size = rxkm$size, 
@@ -146,10 +144,11 @@ grid.arrange(q1, q2, ncol = 2)
 In the last section, we used the `kmeans` function to build clusters on the sample data, and used the centroids it provided us with to initialize the `rxKmeans` function, which builds the clusters on the whole data, thereby considerably reducing its runtmie. One thing that we took for granted is the number of clusters to build. Our decision to build 300 clusters was somewhat arbitrary, based on the gut feeling that we expect about 300 "drop-off hubs" in Manhattan, i.e. points where taxis often drop passengers off. In this exercise, we provide a little more backing for our choice of the number of clusters.
 
 Let's go back to the sample data and the `kmeans` function, as shown here. We made two changes to the function call:
+
 - we let the number of clusters vary based on what we pick for `nclus`
 - by letting `nstart = 1` we initialize the clusters only once, making it run much faster at the expense of less "stable" clusters (which we don't care about in this case)
 
-```{r}
+```{r chap05chunk08}
 nclus <- 50
 kmeans_nclus <- kmeans(xydata, centers = nclus, iter.max = 2000, nstart = 1)
 sum(kmeans_nclus$withinss)
@@ -161,7 +160,7 @@ The number we extracted is the sum of the within-cluster sum of squares for each
 
 (2) Demonstrate the concept of decreasing total WSSs as we assign a larger and larger number to `nclus` by letting `nculs` loop through the increasing sequence of numbers given by `nclus_seq`, and running `find_wss` in each case. You can do so by plotting the results.
 
-```{r}
+```{r chap05chunk09}
 nclus_seq <- seq(20, 1000, by = 50)
 ```
 
@@ -169,7 +168,7 @@ nclus_seq <- seq(20, 1000, by = 50)
 
 (1) The function shown here has `nclus` as its only argument, but we also use `...` to pass any arguments `kmeans` take to `find_wss` as well. This could be helpful if we wanted to change `nstart` or the data itself.
 
-```{r}
+```{r chap05chunk10}
 find_wss <- function(nclus, ...) {
 st <- Sys.time()
 res <- sum(kmeans(centers = nclus, ...)$withinss)
@@ -182,7 +181,7 @@ find_wss(nclus = 10, x = xydata, iter.max = 500, nstart = 1)
 
 (2) We use `sapply` to run the above function in a loop. This makes the notation more clean and easy to modify. We then use `ggplot2` to plot the results. Another interesting to notice is that `nclus` goes up, the function takes longer and longer to run. This has implications on building the clusters on the whole data: the number of clusters we want to build can significantly add to the runtime.
 
-```{r}
+```{r chap05chunk11}
 wss <- sapply(nclus_seq, find_wss, x = xydata, iter.max = 500, nstart = 1)
 
 library(ggplot2)

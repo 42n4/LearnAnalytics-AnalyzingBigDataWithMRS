@@ -220,7 +220,8 @@ To divide the data into training and testing portions, we first used `rxDataStep
 
 ```{r chap07chunk17}
 dir.create(file.path(data_dir, 'output'), showWarnings = FALSE)
-rx_split_xdf <- function(xdf = mht_xdf, split_perc = 0.75, output_path = "output", ...) {
+rx_split_xdf <- function(xdf = mht_xdf, split_perc = 0.75,
+                         output_path = file.path(data_dir, "output"), ...) {
   # first create a column to split by
   outFile <- tempfile(fileext = 'xdf')
   rxDataStep(inData = xdf, outFile = xdf, transforms = list(
