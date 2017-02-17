@@ -1,7 +1,7 @@
 Building models
 ================
 Seth Mottaghinejad
-2017-02-08
+2017-02-17
 
 Trying to modeling a given behavior can be a very involved task, as the data itself and business requirements have a say into our choice for a model. Some models have higher predictive power but are less easy to interpret, and others are the other way around. Moreover, the process of building a model can also involves several stages such as choosing among many models then iterating so we can tune the model we've decided upon.
 
@@ -24,19 +24,19 @@ form_1 <- as.formula(tip_percent ~ pickup_nb:dropoff_nb + pickup_dow:pickup_hour
 rxlm_1 <- rxLinMod(form_1, data = mht_xdf, dropFirst = TRUE, covCoef = TRUE)
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 0.043 seconds
-    ## Rows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 0.049 seconds
-    ## Rows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 0.053 seconds
-    ## Rows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 0.058 seconds
-    ## Rows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 0.051 seconds
-    ## Rows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 0.049 seconds
-    ## Rows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 0.048 seconds
-    ## Rows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 0.049 seconds
-    ## Rows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 0.052 seconds
-    ## Rows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 0.049 seconds
-    ## Rows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 0.050 seconds
-    ## Rows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 0.038 seconds 
-    ## Computation time: 0.783 seconds.
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813
 
 Examining the model coefficients individually is a daunting task because of how many there are. Moreover, when working with big datasets, a lot of coefficients come out as statistically significant by virtue of large sample size, without necessarily being practically significant. Instead for now we just look at how our predictions are looking. We start by extracting each variable's factor levels into a `list` which we can pass to `expand.grid` to create a dataset with all the possible combinations of the factor levels. We then use `rxPredict` to predict `tip_percent` using the above model.
 
@@ -44,19 +44,19 @@ Examining the model coefficients individually is a daunting task because of how 
 rxs <- rxSummary( ~ pickup_nb + dropoff_nb + pickup_hour + pickup_dow, mht_xdf)
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 0.031 seconds
-    ## Rows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 0.037 seconds
-    ## Rows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 0.039 seconds
-    ## Rows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 0.031 seconds
-    ## Rows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 0.032 seconds
-    ## Rows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 0.032 seconds
-    ## Rows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 0.029 seconds
-    ## Rows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 0.029 seconds
-    ## Rows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 0.031 seconds
-    ## Rows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 0.029 seconds
-    ## Rows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 0.032 seconds
-    ## Rows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 0.029 seconds 
-    ## Computation time: 0.411 seconds.
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813
 
 ``` r
 ll <- lapply(rxs$categorical, function(x) x[ , 1])
@@ -65,7 +65,8 @@ pred_df_1 <- expand.grid(ll)
 pred_df_1 <- rxPredict(rxlm_1, data = pred_df_1, computeStdErrors = TRUE, writeModelVars = TRUE)
 ```
 
-    ## Rows Read: 38416, Total Rows Processed: 38416, Total Chunk Time: 0.102 seconds
+    ## 
+    Rows Processed: 38416
 
 ``` r
 names(pred_df_1)[1:2] <- paste(c('tip_pred', 'tip_stderr'), 1, sep = "_")
@@ -73,16 +74,16 @@ head(pred_df_1, 10)
 ```
 
     ##    tip_pred_1 tip_stderr_1          pickup_nb dropoff_nb pickup_dow
-    ## 1    7.585604    0.7724980          Chinatown  Chinatown        Sun
-    ## 2   11.652358    0.4108979            Tribeca  Chinatown        Sun
-    ## 3   14.799271    0.7357894       Little Italy  Chinatown        Sun
-    ## 4   10.838549    0.2804085 Financial District  Chinatown        Sun
-    ## 5   12.078835    0.3243162    Lower East Side  Chinatown        Sun
-    ## 6   12.681298    0.4418141               Soho  Chinatown        Sun
-    ## 7   11.396901    0.5630987       Battery Park  Chinatown        Sun
-    ## 8   13.041078    0.3134503  Greenwich Village  Chinatown        Sun
-    ## 9   13.974115    0.2971224       East Village  Chinatown        Sun
-    ## 10  12.652115    0.5050404       West Village  Chinatown        Sun
+    ## 1        7.59        0.772          Chinatown  Chinatown        Sun
+    ## 2       11.65        0.411            Tribeca  Chinatown        Sun
+    ## 3       14.80        0.736       Little Italy  Chinatown        Sun
+    ## 4       10.84        0.280 Financial District  Chinatown        Sun
+    ## 5       12.08        0.324    Lower East Side  Chinatown        Sun
+    ## 6       12.68        0.442               Soho  Chinatown        Sun
+    ## 7       11.40        0.563       Battery Park  Chinatown        Sun
+    ## 8       13.04        0.313  Greenwich Village  Chinatown        Sun
+    ## 9       13.97        0.297       East Village  Chinatown        Sun
+    ## 10      12.65        0.505       West Village  Chinatown        Sun
     ##    pickup_hour
     ## 1      1AM-5AM
     ## 2      1AM-5AM
@@ -109,7 +110,7 @@ ggplot(pred_df_1, aes(x = pickup_nb, y = dropoff_nb)) +
   coord_fixed(ratio = .9)
 ```
 
-![](rendered/images/chap07chunk04-1.png)
+![](../images/chap07chunk04-1.png)
 
 ``` r
 ggplot(pred_df_1, aes(x = pickup_dow, y = pickup_hour)) +
@@ -119,7 +120,7 @@ ggplot(pred_df_1, aes(x = pickup_dow, y = pickup_hour)) +
   coord_fixed(ratio = .9)
 ```
 
-![](rendered/images/chap07chunk05-1.png)
+![](../images/chap07chunk05-1.png)
 
 Choosing between models
 -----------------------
@@ -131,25 +132,26 @@ form_2 <- as.formula(tip_percent ~ pickup_nb:dropoff_nb)
 rxlm_2 <- rxLinMod(form_2, data = mht_xdf, dropFirst = TRUE, covCoef = TRUE)
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 0.029 seconds
-    ## Rows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 0.030 seconds
-    ## Rows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 0.033 seconds
-    ## Rows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 0.030 seconds
-    ## Rows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 0.032 seconds
-    ## Rows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 0.032 seconds
-    ## Rows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 0.031 seconds
-    ## Rows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 0.029 seconds
-    ## Rows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 0.027 seconds
-    ## Rows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 0.024 seconds
-    ## Rows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 0.026 seconds
-    ## Rows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 0.023 seconds 
-    ## Computation time: 0.467 seconds.
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813
 
 ``` r
 pred_df_2 <- rxPredict(rxlm_2, data = pred_df_1, computeStdErrors = TRUE, writeModelVars = TRUE)
 ```
 
-    ## Rows Read: 38416, Total Rows Processed: 38416, Total Chunk Time: 0.095 seconds
+    ## 
+    Rows Processed: 38416
 
 ``` r
 names(pred_df_2)[1:2] <- paste(c('tip_pred', 'tip_stderr'), 2, sep = "_")
@@ -165,12 +167,12 @@ head(pred_df)
 ```
 
     ##   pickup_dow pickup_hour pickup_nb dropoff_nb tip_pred_2 tip_pred_1
-    ## 1        Sun     1AM-5AM Chinatown  Chinatown   7.581197   7.585604
-    ## 2        Sun     5AM-9AM Chinatown  Chinatown   7.581197   6.479020
-    ## 3        Sun    9AM-12PM Chinatown  Chinatown   7.581197   6.719867
-    ## 4        Sun    12PM-4PM Chinatown  Chinatown   7.581197   6.474056
-    ## 5        Sun     4PM-6PM Chinatown  Chinatown   7.581197   6.738151
-    ## 6        Sun    6PM-10PM Chinatown  Chinatown   7.581197   7.488318
+    ## 1        Sun     1AM-5AM Chinatown  Chinatown       7.58       7.59
+    ## 2        Sun     5AM-9AM Chinatown  Chinatown       7.58       6.48
+    ## 3        Sun    9AM-12PM Chinatown  Chinatown       7.58       6.72
+    ## 4        Sun    12PM-4PM Chinatown  Chinatown       7.58       6.47
+    ## 5        Sun     4PM-6PM Chinatown  Chinatown       7.58       6.74
+    ## 6        Sun    6PM-10PM Chinatown  Chinatown       7.58       7.49
 
 We can see from the results above that the predictions with the simpler model are identical across all the days of the week and all the hours for the same pick-up and drop-off combination. Whereas the predictions by the more complex model are unique for every combination of all four variables. In other words, adding `pickup_dow:pickup_hour` to the model adds extra variation to the predictions, and what we'd like to know is if this variation contains important signals or if it more or less behaves like noise. To get to the answer, we compare the distribution of the two predictions when we break them up by `pickup_dow` and `pickup_hour`.
 
@@ -181,7 +183,7 @@ ggplot(data = pred_df) +
   facet_grid(pickup_hour ~ pickup_dow)
 ```
 
-![](rendered/images/chap07chunk07-1.png)
+![](../images/chap07chunk07-1.png)
 
 The simpler model shows the same distribution all throughout, because these two variables have no effect on its predictions, but the more complex model shows a slightly different distribution for each combination of `pickup_dow` and `pickup_hour`, usually in the form of a slight shift in the distribution. That shift represents the effect of `pickup_dow` and `pickup_hour` at each given combination of the two variables. Because the shift is directional (not haphazard), it's safe to say that it captures some kind of important signal (although its practical significance is still up for debate). We can simplify the above plot if we apply some business logic to it.
 
@@ -192,15 +194,26 @@ dfq <- data.frame(probs = seq(0, 1, by = .05))
 dfq$tip_percent <- rxQuantile("tip_percent", data = mht_xdf, probs = dfq$probs)
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 0.038 secondsRows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 0.036 secondsRows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 0.054 secondsRows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 0.038 secondsRows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 0.073 secondsRows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 0.041 secondsRows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 0.040 secondsRows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 0.042 secondsRows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 0.046 secondsRows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 0.171 secondsRows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 0.042 secondsRows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 0.039 seconds 
-    ## Computation time: 0.679 seconds.
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813
 
 ``` r
 ggplot(aes(x = tip_percent, y = probs), data = dfq) +
   geom_line()
 ```
 
-![](rendered/images/chap07chunk08-1.png)
+![](../images/chap07chunk08-1.png)
 
 Based on the above results, we can bin `tip_percent` by whether they are less than 8%, between 8% and 12%, between 12% and 15%, between 15% and 18%, or 18% or higher. We can then plot a bar plot showing the same information as above, but slightly easier to interpret.
 
@@ -215,7 +228,7 @@ pred_df %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
-![](rendered/images/chap07chunk09-1.png)
+![](../images/chap07chunk09-1.png)
 
 Based on the above plot, we can see that compared to the simple model, the complex model tends to predict more high-tipping passengers and fewer average-tipping ones during certain day and time combinations (such as Monday through Thursday during the rush hours).
 
@@ -263,19 +276,19 @@ form_3 <- as.formula(tip_percent ~ payment_type + pickup_nb:dropoff_nb + pickup_
 rxlm_3 <- rxLinMod(form_3, data = mht_xdf, dropFirst = TRUE, covCoef = TRUE)
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 0.060 seconds
-    ## Rows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 0.045 seconds
-    ## Rows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 0.056 seconds
-    ## Rows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 0.046 seconds
-    ## Rows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 0.045 seconds
-    ## Rows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 0.050 seconds
-    ## Rows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 0.048 seconds
-    ## Rows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 0.051 seconds
-    ## Rows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 0.078 seconds
-    ## Rows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 0.066 seconds
-    ## Rows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 0.060 seconds
-    ## Rows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 0.066 seconds 
-    ## Computation time: 0.982 seconds.
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813
 
 1.  There are different ways of combining the predictions. One approach is to first let's make the predictions and store them in separate datasets and use `cbind` to combine them (as long as the order of the rows doesn't change). We can then use the `mutate_at` function in `dplyr` to apply the binning transformation to the two predictions (we can use `mutate` too but `mutate_at` has a more concise notation).
 
@@ -283,19 +296,19 @@ rxlm_3 <- rxLinMod(form_3, data = mht_xdf, dropFirst = TRUE, covCoef = TRUE)
 rxs <- rxSummary( ~ payment_type + pickup_nb + dropoff_nb + pickup_hour + pickup_dow, mht_xdf)
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 0.039 seconds
-    ## Rows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 0.046 seconds
-    ## Rows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 0.046 seconds
-    ## Rows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 0.046 seconds
-    ## Rows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 0.046 seconds
-    ## Rows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 0.045 seconds
-    ## Rows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 0.045 seconds
-    ## Rows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 0.044 seconds
-    ## Rows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 0.044 seconds
-    ## Rows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 0.047 seconds
-    ## Rows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 0.046 seconds
-    ## Rows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 0.043 seconds 
-    ## Computation time: 0.580 seconds.
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813
 
 ``` r
 ll <- lapply(rxs$categorical, function(x) x[ , 1])
@@ -305,13 +318,15 @@ pred_df <- expand.grid(ll)
 pred_df_1 <- rxPredict(rxlm_1, data = pred_df, computeStdErrors = TRUE, writeModelVars = TRUE)
 ```
 
-    ## Rows Read: 76832, Total Rows Processed: 76832, Total Chunk Time: 0.184 seconds
+    ## 
+    Rows Processed: 76832
 
 ``` r
 pred_df_3 <- rxPredict(rxlm_3, data = pred_df, computeStdErrors = TRUE, writeModelVars = TRUE)
 ```
 
-    ## Rows Read: 76832, Total Rows Processed: 76832, Total Chunk Time: 0.197 seconds
+    ## 
+    Rows Processed: 76832
 
 ``` r
 pred_df %>%
@@ -331,7 +346,7 @@ ggplot(data = pred_all) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
-![](rendered/images/chap07chunk15-1.png)
+![](../images/chap07chunk15-1.png)
 
 The model does in fact predict as we expected. It is also possible that are predictions are good, but need to be calibrated. We can recalibrate the predictions by adding a single line of code just before we bin the predictions. To recalibrate the predictions, we use the `rescale` function in the `scales` library. In this case, we are rescaling predictions so that both models predict a number between 0 and 20% tip.
 
@@ -351,7 +366,7 @@ ggplot(data = pred_all) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
-![](rendered/images/chap07chunk16-1.png)
+![](../images/chap07chunk16-1.png)
 
 Using other algorithms
 ----------------------
@@ -362,7 +377,8 @@ To divide the data into training and testing portions, we first used `rxDataStep
 
 ``` r
 dir.create(file.path(data_dir, 'output'), showWarnings = FALSE)
-rx_split_xdf <- function(xdf = mht_xdf, split_perc = 0.75, output_path = "output", ...) {
+rx_split_xdf <- function(xdf = mht_xdf, split_perc = 0.75,
+                         output_path = file.path(data_dir, "output"), ...) {
   # first create a column to split by
   outFile <- tempfile(fileext = 'xdf')
   rxDataStep(inData = xdf, outFile = xdf, transforms = list(
@@ -383,30 +399,80 @@ mht_split <- rx_split_xdf(xdf = mht_xdf,
                                  'pickup_hour', 'pickup_dow', 'pickup_nb', 'dropoff_nb'))
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 0.801 secondsRows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 0.755 secondsRows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 0.653 secondsRows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 1.453 secondsRows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 1.022 secondsRows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 0.859 secondsRows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 0.868 secondsRows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 0.916 secondsRows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 0.903 secondsRows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 0.967 secondsRows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 0.880 secondsRows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 0.664 seconds 
-    ## Rows Read: 103080, Total Rows Processed: 103080, Total Chunk Time: 0.501 seconds 
-    ## Rows Read: 309103, Total Rows Processed: 309103, Total Chunk Time: 1.115 seconds 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 6.295 secondsRows Read: 103172, Total Rows Processed: 103172, Total Chunk Time: 0.595 seconds 
-    ## Rows Read: 308843, Total Rows Processed: 308843, Total Chunk Time: 1.081 seconds 
-    ## Rows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 6.441 secondsRows Read: 101790, Total Rows Processed: 101790, Total Chunk Time: 0.411 seconds 
-    ## Rows Read: 308530, Total Rows Processed: 308530, Total Chunk Time: 1.140 seconds 
-    ## Rows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 6.165 secondsRows Read: 102461, Total Rows Processed: 102461, Total Chunk Time: 0.492 seconds 
-    ## Rows Read: 307979, Total Rows Processed: 307979, Total Chunk Time: 1.100 seconds 
-    ## Rows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 5.912 secondsRows Read: 103703, Total Rows Processed: 103703, Total Chunk Time: 0.488 seconds 
-    ## Rows Read: 310560, Total Rows Processed: 310560, Total Chunk Time: 0.934 seconds 
-    ## Rows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 5.931 secondsRows Read: 103348, Total Rows Processed: 103348, Total Chunk Time: 0.451 seconds 
-    ## Rows Read: 310628, Total Rows Processed: 310628, Total Chunk Time: 0.856 seconds 
-    ## Rows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 5.546 secondsRows Read: 102973, Total Rows Processed: 102973, Total Chunk Time: 0.275 seconds 
-    ## Rows Read: 310983, Total Rows Processed: 310983, Total Chunk Time: 0.883 seconds 
-    ## Rows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 5.485 secondsRows Read: 103453, Total Rows Processed: 103453, Total Chunk Time: 0.584 seconds 
-    ## Rows Read: 311226, Total Rows Processed: 311226, Total Chunk Time: 1.091 seconds 
-    ## Rows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 6.520 secondsRows Read: 104809, Total Rows Processed: 104809, Total Chunk Time: 0.490 seconds 
-    ## Rows Read: 313499, Total Rows Processed: 313499, Total Chunk Time: 0.877 seconds 
-    ## Rows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 5.748 secondsError in file C:\Users\sethmott\OneDrive\Documents\courses\LearnAnalytics-AnalyzingBigDataWithMRS\output\train.split.test.xdf: Permission denied Rows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 3.542 secondsRows Read: 104131, Total Rows Processed: 104131, Total Chunk Time: 0.421 seconds 
-    ## Rows Read: 311419, Total Rows Processed: 311419, Total Chunk Time: 0.964 seconds 
-    ## Rows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 5.979 secondsRows Read: 104257, Total Rows Processed: 104257, Total Chunk Time: 0.496 seconds 
-    ## Rows Read: 311218, Total Rows Processed: 311218, Total Chunk Time: 1.199 seconds 
-    ## Rows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 6.598 seconds
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813 
+    ## 
+    Rows Processed: 103323 
+    ## 
+    Rows Processed: 308860 
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 102659 
+    ## 
+    Rows Processed: 309356 
+    ## 
+    Rows Processed: 824198
+    Rows Processed: 102180 
+    ## 
+    Rows Processed: 308140 
+    ## 
+    Rows Processed: 1234518
+    Rows Processed: 102723 
+    ## 
+    Rows Processed: 307717 
+    ## 
+    Rows Processed: 1644958
+    Rows Processed: 103504 
+    ## 
+    Rows Processed: 310759 
+    ## 
+    Rows Processed: 2059221
+    Rows Processed: 103045 
+    ## 
+    Rows Processed: 310931 
+    ## 
+    Rows Processed: 2473197
+    Rows Processed: 103566 
+    ## 
+    Rows Processed: 310390 
+    ## 
+    Rows Processed: 2887153
+    Rows Processed: 103759 
+    ## 
+    Rows Processed: 310920 
+    ## 
+    Rows Processed: 3301832
+    Rows Processed: 104675 
+    ## 
+    Rows Processed: 313633 
+    ## 
+    Rows Processed: 3720140
+    Rows Processed: 104527 
+    ## 
+    Rows Processed: 314121 
+    ## 
+    Rows Processed: 4138788
+    Rows Processed: 104175 
+    ## 
+    Rows Processed: 311375 
+    ## 
+    Rows Processed: 4554338
+    Rows Processed: 104037 
+    ## 
+    Rows Processed: 311438 
+    ## 
+    Rows Processed: 4969813
 
 ``` r
 names(mht_split) <- c("train", "test")
@@ -423,21 +489,21 @@ system.time(linmod <- rxLinMod(tip_percent ~ pickup_nb:dropoff_nb + pickup_dow:p
 ```
 
     ##    user  system elapsed 
-    ##    0.02    0.00    0.78
+    ##    0.02    0.00    0.47
 
 ``` r
 system.time(dtree <- rxDTree(tip_percent ~ pickup_nb + dropoff_nb + pickup_dow + pickup_hour, data = mht_split$train, pruneCp = "auto", reportProgress = 0))
 ```
 
     ##    user  system elapsed 
-    ##    0.02    0.00   99.10
+    ##    0.04    0.00   84.47
 
 ``` r
 system.time(dforest <- rxDForest(tip_percent ~ pickup_nb + dropoff_nb + pickup_dow + pickup_hour, data = mht_split$train, nTree = 30, importance = TRUE, useSparseCube = TRUE, reportProgress = 0))
 ```
 
     ##    user  system elapsed 
-    ##    0.08    0.03  288.97
+    ##    0.11    0.00  238.55
 
 Since running the above algorithms can take a while, it may be worth saving the models that each return.
 
@@ -456,19 +522,22 @@ pred_df <- expand.grid(ll[2:5])
 pred_df_1 <- rxPredict(trained.models$linmod, data = pred_df, predVarNames = "pred_linmod")
 ```
 
-    ## Rows Read: 38416, Total Rows Processed: 38416, Total Chunk Time: 0.005 seconds
+    ## 
+    Rows Processed: 38416
 
 ``` r
 pred_df_2 <- rxPredict(trained.models$dtree, data = pred_df, predVarNames = "pred_dtree")
 ```
 
-    ## Rows Read: 38416, Total Rows Processed: 38416, Total Chunk Time: 0.053 seconds
+    ## 
+    Rows Processed: 38416
 
 ``` r
 pred_df_3 <- rxPredict(trained.models$dforest, data = pred_df, predVarNames = "pred_dforest")
 ```
 
-    ## Rows Read: 38416, Total Rows Processed: 38416, Total Chunk Time: 2.773 seconds
+    ## 
+    Rows Processed: 38416
 
 ``` r
 pred_df <- do.call(cbind, list(pred_df, pred_df_1, pred_df_2, pred_df_3))
@@ -476,19 +545,19 @@ pred_df <- do.call(cbind, list(pred_df, pred_df_1, pred_df_2, pred_df_3))
 observed_df <- rxSummary(tip_percent ~ pickup_nb:dropoff_nb:pickup_dow:pickup_hour, mht_xdf)
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 0.030 seconds
-    ## Rows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 0.055 seconds
-    ## Rows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 0.068 seconds
-    ## Rows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 0.066 seconds
-    ## Rows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 0.059 seconds
-    ## Rows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 0.071 seconds
-    ## Rows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 0.069 seconds
-    ## Rows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 0.066 seconds
-    ## Rows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 0.060 seconds
-    ## Rows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 0.087 seconds
-    ## Rows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 0.096 seconds
-    ## Rows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 0.070 seconds 
-    ## Computation time: 0.917 seconds.
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813
 
 ``` r
 observed_df <- observed_df$categorical[[1]][ , c(2:6)]
@@ -503,7 +572,7 @@ ggplot(data = pred_df) +
   xlab("tip percent")
 ```
 
-![](rendered/images/chap07chunk20-1.png)
+![](../images/chap07chunk20-1.png)
 
 Both the linear model and the random forest give us smooth predictions. We can see that the random forest predictions are the most concentrated. The predictions for the decision tree follow a jagged distribution, probably as a result of overfitting, but we don't know that until we check performance against the test set.
 
@@ -518,49 +587,55 @@ The first metric we look at is the average of the squared residuals, which gives
 rxPredict(trained.models$linmod, data = mht_split$test, outData = mht_split$test, predVarNames = "tip_percent_pred_linmod", overwrite = TRUE)
 ```
 
-    ## Rows Read: 309103, Total Rows Processed: 309103, Total Chunk Time: 0.053 seconds
-    ## Rows Read: 308843, Total Rows Processed: 617946, Total Chunk Time: 0.160 seconds
-    ## Rows Read: 308530, Total Rows Processed: 926476, Total Chunk Time: 0.119 seconds
-    ## Rows Read: 307979, Total Rows Processed: 1234455, Total Chunk Time: 0.138 seconds
-    ## Rows Read: 310560, Total Rows Processed: 1545015, Total Chunk Time: 0.146 seconds
-    ## Rows Read: 310628, Total Rows Processed: 1855643, Total Chunk Time: 0.137 seconds
-    ## Rows Read: 310983, Total Rows Processed: 2166626, Total Chunk Time: 0.160 seconds
-    ## Rows Read: 311226, Total Rows Processed: 2477852, Total Chunk Time: 0.152 seconds
-    ## Rows Read: 313499, Total Rows Processed: 2791351, Total Chunk Time: 0.140 seconds
-    ## Rows Read: 311419, Total Rows Processed: 3102770, Total Chunk Time: 0.134 seconds
-    ## Rows Read: 311218, Total Rows Processed: 3413988, Total Chunk Time: 0.134 seconds
+    ## 
+    Rows Processed: 308860
+    Rows Processed: 618216
+    Rows Processed: 926356
+    Rows Processed: 1234073
+    Rows Processed: 1544832
+    Rows Processed: 1855763
+    Rows Processed: 2166153
+    Rows Processed: 2477073
+    Rows Processed: 2790706
+    Rows Processed: 3104827
+    Rows Processed: 3416202
+    Rows Processed: 3727640
 
 ``` r
 rxPredict(trained.models$dtree, data = mht_split$test, outData = mht_split$test, predVarNames = "tip_percent_pred_dtree", overwrite = TRUE)
 ```
 
-    ## Rows Read: 309103, Total Rows Processed: 309103, Total Chunk Time: 0.361 seconds
-    ## Rows Read: 308843, Total Rows Processed: 617946, Total Chunk Time: 1.004 seconds
-    ## Rows Read: 308530, Total Rows Processed: 926476, Total Chunk Time: 0.877 seconds
-    ## Rows Read: 307979, Total Rows Processed: 1234455, Total Chunk Time: 0.755 seconds
-    ## Rows Read: 310560, Total Rows Processed: 1545015, Total Chunk Time: 0.815 seconds
-    ## Rows Read: 310628, Total Rows Processed: 1855643, Total Chunk Time: 0.802 seconds
-    ## Rows Read: 310983, Total Rows Processed: 2166626, Total Chunk Time: 0.907 seconds
-    ## Rows Read: 311226, Total Rows Processed: 2477852, Total Chunk Time: 0.959 seconds
-    ## Rows Read: 313499, Total Rows Processed: 2791351, Total Chunk Time: 1.280 seconds
-    ## Rows Read: 311419, Total Rows Processed: 3102770, Total Chunk Time: 0.968 seconds
-    ## Rows Read: 311218, Total Rows Processed: 3413988, Total Chunk Time: 1.054 seconds
+    ## 
+    Rows Processed: 308860
+    Rows Processed: 618216
+    Rows Processed: 926356
+    Rows Processed: 1234073
+    Rows Processed: 1544832
+    Rows Processed: 1855763
+    Rows Processed: 2166153
+    Rows Processed: 2477073
+    Rows Processed: 2790706
+    Rows Processed: 3104827
+    Rows Processed: 3416202
+    Rows Processed: 3727640
 
 ``` r
 rxPredict(trained.models$dforest, data = mht_split$test, outData = mht_split$test, predVarNames = "tip_percent_pred_dforest", overwrite = TRUE)
 ```
 
-    ## Rows Read: 309103, Total Rows Processed: 309103, Total Chunk Time: 0.573 seconds
-    ## Rows Read: 308843, Total Rows Processed: 617946, Total Chunk Time: 52.158 seconds
-    ## Rows Read: 308530, Total Rows Processed: 926476, Total Chunk Time: 50.840 seconds
-    ## Rows Read: 307979, Total Rows Processed: 1234455, Total Chunk Time: 51.338 seconds
-    ## Rows Read: 310560, Total Rows Processed: 1545015, Total Chunk Time: 51.811 seconds
-    ## Rows Read: 310628, Total Rows Processed: 1855643, Total Chunk Time: 52.478 seconds
-    ## Rows Read: 310983, Total Rows Processed: 2166626, Total Chunk Time: 54.031 seconds
-    ## Rows Read: 311226, Total Rows Processed: 2477852, Total Chunk Time: 50.925 seconds
-    ## Rows Read: 313499, Total Rows Processed: 2791351, Total Chunk Time: 50.903 seconds
-    ## Rows Read: 311419, Total Rows Processed: 3102770, Total Chunk Time: 52.047 seconds
-    ## Rows Read: 311218, Total Rows Processed: 3413988, Total Chunk Time: 44.681 seconds
+    ## 
+    Rows Processed: 308860
+    Rows Processed: 618216
+    Rows Processed: 926356
+    Rows Processed: 1234073
+    Rows Processed: 1544832
+    Rows Processed: 1855763
+    Rows Processed: 2166153
+    Rows Processed: 2477073
+    Rows Processed: 2790706
+    Rows Processed: 3104827
+    Rows Processed: 3416202
+    Rows Processed: 3727640
 
 ``` r
 rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test,
@@ -570,8 +645,19 @@ rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test,
     SSE_dforest = (tip_percent - tip_percent_pred_dforest)^2))
 ```
 
-    ## Rows Read: 309103, Total Rows Processed: 309103, Total Chunk Time: 0.110 secondsRows Read: 308843, Total Rows Processed: 617946, Total Chunk Time: 0.097 secondsRows Read: 308530, Total Rows Processed: 926476, Total Chunk Time: 0.094 secondsRows Read: 307979, Total Rows Processed: 1234455, Total Chunk Time: 0.094 secondsRows Read: 310560, Total Rows Processed: 1545015, Total Chunk Time: 0.112 secondsRows Read: 310628, Total Rows Processed: 1855643, Total Chunk Time: 0.134 secondsRows Read: 310983, Total Rows Processed: 2166626, Total Chunk Time: 0.140 secondsRows Read: 311226, Total Rows Processed: 2477852, Total Chunk Time: 0.125 secondsRows Read: 313499, Total Rows Processed: 2791351, Total Chunk Time: 0.143 secondsRows Read: 311419, Total Rows Processed: 3102770, Total Chunk Time: 0.115 secondsRows Read: 311218, Total Rows Processed: 3413988, Total Chunk Time: 0.100 seconds 
-    ## Computation time: 1.328 seconds.
+    ## 
+    Rows Processed: 308860
+    Rows Processed: 618216
+    Rows Processed: 926356
+    Rows Processed: 1234073
+    Rows Processed: 1544832
+    Rows Processed: 1855763
+    Rows Processed: 2166153
+    Rows Processed: 2477073
+    Rows Processed: 2790706
+    Rows Processed: 3104827
+    Rows Processed: 3416202
+    Rows Processed: 3727640
 
     ## Call:
     ## rxSummary(formula = ~SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test, 
@@ -582,14 +668,13 @@ rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test,
     ## Summary Statistics Results for: ~SSE_linmod + SSE_dtree +
     ##     SSE_dforest
     ## Data: mht_split$test (RxXdfData Data Source)
-    ## File name:
-    ##     C:\Users\sethmott\OneDrive\Documents\courses\LearnAnalytics-AnalyzingBigDataWithMRS\output\train.split.train.xdf
-    ## Number of valid observations: 3413988 
+    ## File name: C:\Data\NYC_taxi\output\train.split.train.xdf
+    ## Number of valid observations: 3727640 
     ##  
-    ##  Name        Mean     StdDev   Min          Max      ValidObs MissingObs
-    ##  SSE_linmod  139.2831 177.0961 7.173907e-09 7966.998 3411314  2674      
-    ##  SSE_dtree   139.2769 177.3667 1.561719e-06 8034.524 3411314  2674      
-    ##  SSE_dforest 138.9375 176.2230 6.151240e-09 7675.576 3411314  2674
+    ##  Name        Mean StdDev Min            Max  ValidObs MissingObs
+    ##  SSE_linmod  139  177    0.000000001277 7943 3724737  2903      
+    ##  SSE_dtree   139  178    0.000000053808 7983 3724737  2903      
+    ##  SSE_dforest 139  176    0.000000000558 7761 3724737  2903
 
 Another metric worth looking at is a correlation matrix. This can help us determine to what extent the predictions from the different models are close to each other, and to what extent each is close to the actual or observed tip percent.
 
@@ -597,33 +682,34 @@ Another metric worth looking at is a correlation matrix. This can help us determ
 rxc <- rxCor( ~ tip_percent + tip_percent_pred_linmod + tip_percent_pred_dtree + tip_percent_pred_dforest, data = mht_split$test)
 ```
 
-    ## Rows Read: 309103, Total Rows Processed: 309103, Total Chunk Time: 0.041 seconds
-    ## Rows Read: 308843, Total Rows Processed: 617946, Total Chunk Time: 0.047 seconds
-    ## Rows Read: 308530, Total Rows Processed: 926476, Total Chunk Time: 0.043 seconds
-    ## Rows Read: 307979, Total Rows Processed: 1234455, Total Chunk Time: 0.043 seconds
-    ## Rows Read: 310560, Total Rows Processed: 1545015, Total Chunk Time: 0.047 seconds
-    ## Rows Read: 310628, Total Rows Processed: 1855643, Total Chunk Time: 0.044 seconds
-    ## Rows Read: 310983, Total Rows Processed: 2166626, Total Chunk Time: 0.044 seconds
-    ## Rows Read: 311226, Total Rows Processed: 2477852, Total Chunk Time: 0.046 seconds
-    ## Rows Read: 313499, Total Rows Processed: 2791351, Total Chunk Time: 0.042 seconds
-    ## Rows Read: 311419, Total Rows Processed: 3102770, Total Chunk Time: 0.043 seconds
-    ## Rows Read: 311218, Total Rows Processed: 3413988, Total Chunk Time: 0.046 seconds 
-    ## Computation time: 0.495 seconds.
+    ## 
+    Rows Processed: 308860
+    Rows Processed: 618216
+    Rows Processed: 926356
+    Rows Processed: 1234073
+    Rows Processed: 1544832
+    Rows Processed: 1855763
+    Rows Processed: 2166153
+    Rows Processed: 2477073
+    Rows Processed: 2790706
+    Rows Processed: 3104827
+    Rows Processed: 3416202
+    Rows Processed: 3727640
 
 ``` r
 print(rxc)
 ```
 
     ##                          tip_percent tip_percent_pred_linmod
-    ## tip_percent                1.0000000               0.1355308
-    ## tip_percent_pred_linmod    0.1355308               1.0000000
-    ## tip_percent_pred_dtree     0.1356367               0.8399694
-    ## tip_percent_pred_dforest   0.1470305               0.9058420
+    ## tip_percent                    1.000                   0.136
+    ## tip_percent_pred_linmod        0.136                   1.000
+    ## tip_percent_pred_dtree         0.138                   0.842
+    ## tip_percent_pred_dforest       0.147                   0.900
     ##                          tip_percent_pred_dtree tip_percent_pred_dforest
-    ## tip_percent                           0.1356367                0.1470305
-    ## tip_percent_pred_linmod               0.8399694                0.9058420
-    ## tip_percent_pred_dtree                1.0000000                0.9281978
-    ## tip_percent_pred_dforest              0.9281978                1.0000000
+    ## tip_percent                               0.138                    0.147
+    ## tip_percent_pred_linmod                   0.842                    0.900
+    ## tip_percent_pred_dtree                    1.000                    0.923
+    ## tip_percent_pred_dforest                  0.923                    1.000
 
 ### Exercises
 
@@ -713,19 +799,22 @@ pred_df <- expand.grid(ll)
 pred_df_1 <- rxPredict(trained.models$linmod_1, data = pred_df, predVarNames = "pred_linmod_1")
 ```
 
-    ## Rows Read: 76832, Total Rows Processed: 76832, Total Chunk Time: 0.010 seconds
+    ## 
+    Rows Processed: 76832
 
 ``` r
 pred_df_2 <- rxPredict(trained.models$linmod_2, data = pred_df, predVarNames = "pred_linmod_2")
 ```
 
-    ## Rows Read: 76832, Total Rows Processed: 76832, Total Chunk Time: 0.012 seconds
+    ## 
+    Rows Processed: 76832
 
 ``` r
 pred_df_3 <- rxPredict(trained.models$dtree, data = pred_df, predVarNames = "pred_dtree")
 ```
 
-    ## Rows Read: 76832, Total Rows Processed: 76832, Total Chunk Time: 0.061 seconds
+    ## 
+    Rows Processed: 76832
 
 ``` r
 pred_df <- bind_cols(pred_df, pred_df_1, pred_df_2, pred_df_3)
@@ -739,13 +828,13 @@ head(pred_df)
     ## 4         cash      Tribeca  Chinatown     1AM-5AM        Sun
     ## 5         card Little Italy  Chinatown     1AM-5AM        Sun
     ## 6         cash Little Italy  Chinatown     1AM-5AM        Sun
-    ##   pred_linmod_1 pred_linmod_2   pred_dtree
-    ## 1       5.31719     19.772562 2.107314e+01
-    ## 2       5.31719     -1.579108 2.229304e-04
-    ## 3      13.78590     22.495468 2.243466e+01
-    ## 4      13.78590      1.143798 2.229304e-04
-    ## 5      14.67983     22.789951 2.243466e+01
-    ## 6      14.67983      1.438281 2.229304e-04
+    ##   pred_linmod_1 pred_linmod_2 pred_dtree
+    ## 1          8.79       21.2691  21.056393
+    ## 2          8.79       -0.0916   0.000328
+    ## 3         11.25       21.5448  21.056393
+    ## 4         11.25        0.1841   0.000328
+    ## 5         14.70       23.0329  21.056393
+    ## 6         14.70        1.6722   0.000328
 
 1.  We now feed the above data to `ggplot` to look at the distribution of the predictions made by each model. It should come as no surprise that with the inclusion of `payment_type` the predictions have a **bimodal distribution** one for trips paid in cash and one for trips paid using a card. For trips paid in cash, the actual distribution is not as important, but for trips paid using a card we can see that the random forest model makes predictions that are less spread out than the other two models.
 
@@ -759,7 +848,7 @@ ggplot(data = pred_df) +
   facet_grid(payment_type ~ ., scales = "free")
 ```
 
-![](rendered/images/chap07chunk30-1.png)
+![](../images/chap07chunk30-1.png)
 
 1.  We now run the predictions on the test data to evaluate each model's performance. To do so, we use `rxPredict` without the `outData` argument and make an assignment on the left side so results would go into a `data.frame`.
 
@@ -767,35 +856,40 @@ ggplot(data = pred_df) +
 test_df <- rxDataStep(mht_split$test, varsToKeep = c('tip_percent', 'payment_type', 'pickup_nb', 'dropoff_nb', 'pickup_hour', 'pickup_dow'), maxRowsByCols = 10^9)
 ```
 
-    ## Rows Read: 309103, Total Rows Processed: 309103, Total Chunk Time: 0.117 seconds
-    ## Rows Read: 308843, Total Rows Processed: 617946, Total Chunk Time: 0.115 seconds
-    ## Rows Read: 308530, Total Rows Processed: 926476, Total Chunk Time: 0.119 seconds
-    ## Rows Read: 307979, Total Rows Processed: 1234455, Total Chunk Time: 0.120 seconds
-    ## Rows Read: 310560, Total Rows Processed: 1545015, Total Chunk Time: 0.142 seconds
-    ## Rows Read: 310628, Total Rows Processed: 1855643, Total Chunk Time: 0.135 seconds
-    ## Rows Read: 310983, Total Rows Processed: 2166626, Total Chunk Time: 0.115 seconds
-    ## Rows Read: 311226, Total Rows Processed: 2477852, Total Chunk Time: 0.114 seconds
-    ## Rows Read: 313499, Total Rows Processed: 2791351, Total Chunk Time: 0.132 seconds
-    ## Rows Read: 311419, Total Rows Processed: 3102770, Total Chunk Time: 0.143 seconds
-    ## Rows Read: 311218, Total Rows Processed: 3413988, Total Chunk Time: 0.126 seconds
+    ## 
+    Rows Processed: 308860
+    Rows Processed: 618216
+    Rows Processed: 926356
+    Rows Processed: 1234073
+    Rows Processed: 1544832
+    Rows Processed: 1855763
+    Rows Processed: 2166153
+    Rows Processed: 2477073
+    Rows Processed: 2790706
+    Rows Processed: 3104827
+    Rows Processed: 3416202
+    Rows Processed: 3727640
 
 ``` r
 test_df_1 <- rxPredict(trained.models$linmod_1, data = test_df, predVarNames = "tip_pred_linmod_1")
 ```
 
-    ## Rows Read: 3413988, Total Rows Processed: 3413988, Total Chunk Time: 0.485 seconds
+    ## 
+    Rows Processed: 3727640
 
 ``` r
 test_df_2 <- rxPredict(trained.models$linmod_2, data = test_df, predVarNames = "tip_pred_linmod_2")
 ```
 
-    ## Rows Read: 3413988, Total Rows Processed: 3413988, Total Chunk Time: 0.371 seconds
+    ## 
+    Rows Processed: 3727640
 
 ``` r
 test_df_3 <- rxPredict(trained.models$dtree, data = test_df, predVarNames = "tip_pred_dtree")
 ```
 
-    ## Rows Read: 3413988, Total Rows Processed: 3413988, Total Chunk Time: 3.839 seconds
+    ## 
+    Rows Processed: 3727640
 
 ``` r
 test_df <- do.call(cbind, list(test_df, test_df_1, test_df_2, test_df_3))
@@ -810,12 +904,12 @@ head(test_df)
     ## 5           0         cash         Gramercy     West Village    12PM-4PM
     ## 6          34         card Garment District          Midtown     1AM-5AM
     ##   pickup_dow tip_pred_linmod_1 tip_pred_linmod_2 tip_pred_dtree
-    ## 1        Tue          17.82722        23.5175756   2.296579e+01
-    ## 2        Wed          13.22656        -1.3630208   2.229304e-04
-    ## 3        Sun          13.83563        21.2338767   2.148378e+01
-    ## 4        Fri          14.20903        19.5593331   1.885925e+01
-    ## 5        Tue          14.80700        -0.5721377   2.229304e-04
-    ## 6        Fri          11.60607        22.4021369   2.226554e+01
+    ## 1        Tue              17.7            23.552      22.886240
+    ## 2        Wed              13.2            -1.419       0.000328
+    ## 3        Sun              13.7            20.937      22.051412
+    ## 4        Fri              15.0            19.884      18.888734
+    ## 5        Tue              14.8            -0.656       0.000328
+    ## 6        Fri              11.4            22.421      22.138634
 
 Since we have the test data in a `data.frame` we can also plot the distribution of the predictions on the test data to compare it with the last plot. As we can see, the random forest and linear model both probably waste some computation effort making predictions for trips paid in cash.
 
@@ -827,7 +921,7 @@ ggplot(data = test_df) +
   xlab("tip percent") # + facet_grid(pickup_hour ~ pickup_dow)
 ```
 
-![](rendered/images/chap07chunk32-1.png)
+![](../images/chap07chunk32-1.png)
 
 1.  Recall from the last section that the predictions made by the three models had an average SSE of about 80. With the inclusion of `payment_type` we should see a considerable drop in this number.
 
@@ -839,8 +933,8 @@ rxSummary(~ SSE_linmod_1 + SSE_linmod_2 + SSE_dtree, data = test_df,
     SSE_dtree = (tip_percent - tip_pred_dtree)^2))
 ```
 
-    ## Rows Read: 3413988, Total Rows Processed: 3413988, Total Chunk Time: 0.867 seconds 
-    ## Computation time: 0.887 seconds.
+    ## 
+    Rows Processed: 3727640
 
     ## Call:
     ## rxSummary(formula = ~SSE_linmod_1 + SSE_linmod_2 + SSE_dtree, 
@@ -851,34 +945,34 @@ rxSummary(~ SSE_linmod_1 + SSE_linmod_2 + SSE_dtree, data = test_df,
     ## Summary Statistics Results for: ~SSE_linmod_1 + SSE_linmod_2 +
     ##     SSE_dtree
     ## Data: test_df
-    ## Number of valid observations: 3413988 
+    ## Number of valid observations: 3727640 
     ##  
-    ##  Name         Mean      StdDev   Min          Max      ValidObs MissingObs
-    ##  SSE_linmod_1 139.28313 177.0961 7.173907e-09 7966.998 3411314   2674     
-    ##  SSE_linmod_2  40.15389 136.4112 4.429582e-10 6442.592 3397669  16319     
-    ##  SSE_dtree     41.90285 139.7682 4.969794e-08 6587.125 3411314   2674
+    ##  Name         Mean  StdDev Min           Max  ValidObs MissingObs
+    ##  SSE_linmod_1 139.3 177    0.00000000128 7943 3724737   2903     
+    ##  SSE_linmod_2  40.2 136    0.00000000161 6149 3710167  17473     
+    ##  SSE_dtree     41.8 140    0.00000010756 6427 3724737   2903
 
 ``` r
 rxc <- rxCor( ~ tip_percent + tip_pred_linmod_1 + tip_pred_linmod_2 + tip_pred_dtree, data = test_df)
 ```
 
-    ## Rows Read: 3413988, Total Rows Processed: 3413988, Total Chunk Time: 0.059 seconds 
-    ## Computation time: 0.062 seconds.
+    ## 
+    Rows Processed: 3727640
 
 ``` r
 print(rxc)
 ```
 
     ##                   tip_percent tip_pred_linmod_1 tip_pred_linmod_2
-    ## tip_percent         1.0000000         0.1350715         0.8464999
-    ## tip_pred_linmod_1   0.1350715         1.0000000         0.1613814
-    ## tip_pred_linmod_2   0.8464999         0.1613814         1.0000000
-    ## tip_pred_dtree      0.8461313         0.1559149         0.9946175
+    ## tip_percent             1.000             0.136             0.846
+    ## tip_pred_linmod_1       0.136             1.000             0.161
+    ## tip_pred_linmod_2       0.846             0.161             1.000
+    ## tip_pred_dtree          0.846             0.154             0.995
     ##                   tip_pred_dtree
-    ## tip_percent            0.8461313
-    ## tip_pred_linmod_1      0.1559149
-    ## tip_pred_linmod_2      0.9946175
-    ## tip_pred_dtree         1.0000000
+    ## tip_percent                0.846
+    ## tip_pred_linmod_1          0.154
+    ## tip_pred_linmod_2          0.995
+    ## tip_pred_dtree             1.000
 
 The average SSE has now dropped to a little over 20, which confirms how the inclusion of the right features (`payment_type` in this case) can have a significant impact on our model's predictive power.
 

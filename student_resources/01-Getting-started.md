@@ -1,7 +1,7 @@
 Getting started
 ================
 Seth Mottaghinejad
-2017-02-08
+2017-02-17
 
 **R** is a very popular programming language whose rich set of features and packages make it ideally suited for data analysis and modeling. Traditionally, R works by loading (copying) every object (including data sets) as a memory object. This means that large data sets can quickly surpass the amount of available space in the memory. This is especially a problem when multiple users are working on the same R server, where free memory can quickly turn into a scarce resource. Over time, many R packages have been introduced that attempt to overcome this limitation. Some propose a way to more efficiently load and process the data, which would in turn allow us to work with larger data sizes. This approach however can only take us so far, since efficiency eventually hits a wall, and it also sometimes assumes a more sophisticated knowledge about programming that many R users lack.
 

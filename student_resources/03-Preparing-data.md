@@ -1,7 +1,7 @@
 Preparing the data
 ================
 Seth Mottaghinejad
-2017-02-08
+2017-02-17
 
 Raw data is often too primitive to be used directly for analysis. After reading in the raw data, a data scientist spends a great deal of time and effort on cleaning the data and adding the features to the data that pertain to the analysis at hand. How the data needs to be cleaned is something that is partly guided by how the analysis makes business common sense and meets certain requirements, and partly by the specific analytics algorithm that it is being fed to. In other words, it is can be somewhat subjective as long as it does not makes the analysis hard to understand.
 
@@ -22,7 +22,7 @@ rxGetInfo(nyc_xdf, getVarInfo = TRUE, numRows = 5)
 ```
 
     ## File name: C:\Data\NYC_taxi\yellow_tripsample_2016.xdf 
-    ## Number of observations: 6e+06 
+    ## Number of observations: 6000000 
     ## Number of variables: 17 
     ## Number of blocks: 12 
     ## Compression type: zlib 
@@ -54,17 +54,17 @@ rxGetInfo(nyc_xdf, getVarInfo = TRUE, numRows = 5)
     ## 4 2016-06-12 20:13:12 2016-06-12 20:18:53               5          2.23
     ## 5 2016-06-10 23:40:21 2016-06-11 00:05:14               3          2.72
     ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1        -73.97750        40.74949            1         -73.98100
-    ## 2        -73.96890        40.80114            1         -73.98331
-    ## 3        -73.98932        40.71869            1         -73.96317
-    ## 4        -73.98183        40.77286            1         -73.95563
-    ## 5        -74.00858        40.74144            1         -73.98224
+    ## 1              -74            40.7            1               -74
+    ## 2              -74            40.8            1               -74
+    ## 3              -74            40.7            1               -74
+    ## 4              -74            40.8            1               -74
+    ## 5              -74            40.7            1               -74
     ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1         40.74445            1         3.0   0.5     0.5       0.86
-    ## 2         40.75087            2        21.5   0.0     0.5       0.00
-    ## 3         40.71445            1         9.0   0.5     0.5       1.50
-    ## 4         40.78540            1         8.0   0.5     0.5       2.79
-    ## 5         40.72152            1        17.0   0.5     0.5       3.66
+    ## 1             40.7            1         3.0   0.5     0.5       0.86
+    ## 2             40.8            2        21.5   0.0     0.5       0.00
+    ## 3             40.7            1         9.0   0.5     0.5       1.50
+    ## 4             40.8            1         8.0   0.5     0.5       2.79
+    ## 5             40.7            1        17.0   0.5     0.5       3.66
     ##   tolls_amount improvement_surcharge total_amount
     ## 1            0                   0.3         5.16
     ## 2            0                   0.3        22.30
@@ -96,25 +96,37 @@ rxDataStep(nyc_xdf, nyc_xdf,
   overwrite = TRUE)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.045 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 4.539 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 3.756 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 3.806 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 4.052 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 4.032 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 3.891 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 3.851 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 3.686 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 3.848 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 3.877 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 3.914 seconds
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 rxSummary( ~ tip_percent, nyc_xdf)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.010 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.010 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.010 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.010 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.010 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.010 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.011 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.011 seconds 
-    ## Computation time: 0.132 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
     ## Call:
     ## rxSummary(formula = ~tip_percent, data = nyc_xdf)
@@ -122,10 +134,10 @@ rxSummary( ~ tip_percent, nyc_xdf)
     ## Summary Statistics Results for: ~tip_percent
     ## Data: nyc_xdf (RxXdfData Data Source)
     ## File name: C:/Data/NYC_taxi/yellow_tripsample_2016.xdf
-    ## Number of valid observations: 6e+06 
+    ## Number of valid observations: 6000000 
     ##  
-    ##  Name        Mean    StdDev   Min Max ValidObs MissingObs
-    ##  tip_percent 13.9733 11.88687 -1  100 5990374  9626
+    ##  Name        Mean StdDev Min Max ValidObs MissingObs
+    ##  tip_percent 14   11.9   -1  100 5990374  9626
 
 The above transformation was persisted in the data. In other words, there's is now a new column in the data called `tip_percent`. Such a transformation has IO overhead when the data is stored on disk. An alternative approach is to perform the transformation *on the fly* by putting the `transforms` argument directly inside of the `rxSummary` call instead of in a prior `rxDataStep` call. In this case, we don't pay the IO overhead of writing to data on disk.
 
@@ -137,8 +149,19 @@ rxSummary( ~ tip_percent2, nyc_xdf,
                                   NA)))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.163 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.159 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.214 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.161 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.368 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.118 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.136 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.132 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.126 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.133 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.141 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.117 seconds 
-    ## Computation time: 2.000 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
     ## Call:
     ## rxSummary(formula = ~tip_percent2, data = nyc_xdf, transforms = list(tip_percent2 = ifelse(fare_amount > 
@@ -148,10 +171,10 @@ rxSummary( ~ tip_percent2, nyc_xdf,
     ## Summary Statistics Results for: ~tip_percent2
     ## Data: nyc_xdf (RxXdfData Data Source)
     ## File name: C:/Data/NYC_taxi/yellow_tripsample_2016.xdf
-    ## Number of valid observations: 6e+06 
+    ## Number of valid observations: 6000000 
     ##  
-    ##  Name         Mean    StdDev   Min Max ValidObs MissingObs
-    ##  tip_percent2 13.9733 11.88687 -1  100 5990374  9626
+    ##  Name         Mean StdDev Min Max ValidObs MissingObs
+    ##  tip_percent2 14   11.9   -1  100 5990374  9626
 
 In the above case, `tip_percent2` is calculated so `rxSummary` can then provide us with summary statistics, but the transformation does not persist in the data. We can run on the fly transformations on all of the summary and analytics functions in `RevoScaleR` in a similar fashion. For more straight-forward types of transformations, performing the transformation on the fly usually makes sense because it runs faster (no IO overhead) and prevents us from persisting too many columns in the data. It can still be beneficial to presist some transformations if the transformed columns are used repeatedly in various parts of the analysis. In the latter case, the IO overhead may be outweighed by the overhead of repeatedly performing the transformation and the inconvenience of having to copy and paste the same transformation in multiple places.
 
@@ -178,8 +201,19 @@ rxCrossTabs( ~ month:year, nyc_xdf,
                month = factor(month, levels = 1:12)))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 1.068 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 1.360 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 1.272 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 1.613 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 1.781 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 1.347 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 1.490 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 1.565 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 1.740 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 1.664 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 1.870 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 1.535 seconds 
-    ## Computation time: 18.614 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
     ## Call:
     ## rxCrossTabs(formula = ~month:year, data = nyc_xdf, transforms = list(year = as.integer(substr(pickup_datetime, 
@@ -190,25 +224,25 @@ rxCrossTabs( ~ month:year, nyc_xdf,
     ## Cross Tabulation Results for: ~month:year
     ## Data: nyc_xdf (RxXdfData Data Source)
     ## File name: C:/Data/NYC_taxi/yellow_tripsample_2016.xdf
-    ## Number of valid observations: 6e+06
+    ## Number of valid observations: 6000000
     ## Number of missing observations: 0 
     ## Statistic: counts 
     ##  
     ## month:year (counts):
     ##      year
-    ## month 2014 2015  2016
-    ##    1     0    0 1e+06
-    ##    2     0    0 1e+06
-    ##    3     0    0 1e+06
-    ##    4     0    0 1e+06
-    ##    5     0    0 1e+06
-    ##    6     0    0 1e+06
-    ##    7     0    0 0e+00
-    ##    8     0    0 0e+00
-    ##    9     0    0 0e+00
-    ##    10    0    0 0e+00
-    ##    11    0    0 0e+00
-    ##    12    0    0 0e+00
+    ## month 2014 2015    2016
+    ##    1     0    0 1000000
+    ##    2     0    0 1000000
+    ##    3     0    0 1000000
+    ##    4     0    0 1000000
+    ##    5     0    0 1000000
+    ##    6     0    0 1000000
+    ##    7     0    0       0
+    ##    8     0    0       0
+    ##    9     0    0       0
+    ##    10    0    0       0
+    ##    11    0    0       0
+    ##    12    0    0       0
 
 1.  In this case we first convert `pickup_datetime` form `character` to `datetime` and then extract year and month. Because we're using the `lubridate` package we specify this using the `transformPackages` argument. Note that we can't just put `library(lubridate)` at the top, becuase `rxCrossTabs` is a `RevoScaleR` function and as such it can run not just locally, but also in remote compute contexts where the `lubridate` package will have to be loaded before it can execute.
 
@@ -221,8 +255,19 @@ rxCrossTabs( ~ month:year, nyc_xdf,
              transformPackages = "lubridate")
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 1.908 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 2.352 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 2.140 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 2.558 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 2.448 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 2.201 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 2.632 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 2.615 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 2.236 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 2.493 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 2.188 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 2.528 seconds 
-    ## Computation time: 28.719 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
     ## Call:
     ## rxCrossTabs(formula = ~month:year, data = nyc_xdf, transforms = list(date = ymd_hms(pickup_datetime), 
@@ -232,25 +277,25 @@ rxCrossTabs( ~ month:year, nyc_xdf,
     ## Cross Tabulation Results for: ~month:year
     ## Data: nyc_xdf (RxXdfData Data Source)
     ## File name: C:/Data/NYC_taxi/yellow_tripsample_2016.xdf
-    ## Number of valid observations: 6e+06
+    ## Number of valid observations: 6000000
     ## Number of missing observations: 0 
     ## Statistic: counts 
     ##  
     ## month:year (counts):
     ##      year
-    ## month 2014 2015  2016
-    ##    1     0    0 1e+06
-    ##    2     0    0 1e+06
-    ##    3     0    0 1e+06
-    ##    4     0    0 1e+06
-    ##    5     0    0 1e+06
-    ##    6     0    0 1e+06
-    ##    7     0    0 0e+00
-    ##    8     0    0 0e+00
-    ##    9     0    0 0e+00
-    ##    10    0    0 0e+00
-    ##    11    0    0 0e+00
-    ##    12    0    0 0e+00
+    ## month 2014 2015    2016
+    ##    1     0    0 1000000
+    ##    2     0    0 1000000
+    ##    3     0    0 1000000
+    ##    4     0    0 1000000
+    ##    5     0    0 1000000
+    ##    6     0    0 1000000
+    ##    7     0    0       0
+    ##    8     0    0       0
+    ##    9     0    0       0
+    ##    10    0    0       0
+    ##    11    0    0       0
+    ##    12    0    0       0
 
 1.  The first transformation is faster, becuase it deals directly with the strings. The second transformation is more powerful, because we can use it to extract things such as day of week, which can't be directly extracted from the string.
 
@@ -306,19 +351,19 @@ head(xforms(nyc_sample)) # test the function on a data.frame
     ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60
     ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11
     ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1        -73.95630        40.78182            1         -73.98237
-    ## 2        -73.97758        40.74229            1         -73.98560
-    ## 3        -73.98280        40.73094            1         -73.95458
-    ## 4        -73.96043        40.76635            1         -73.95851
-    ## 5        -73.99337        40.74152            1         -73.99491
-    ## 6        -73.97186        40.75442            1         -74.00585
+    ## 1              -74            40.8            1               -74
+    ## 2              -74            40.7            1               -74
+    ## 3              -74            40.7            1               -74
+    ## 4              -74            40.8            1               -74
+    ## 5              -74            40.7            1               -74
+    ## 6              -74            40.8            1               -74
     ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1         40.77283            1        11.5   0.0     0.5       3.00
-    ## 2         40.68565            1        19.5   0.5     0.5       5.20
-    ## 3         40.76549            1        10.0   0.5     0.5       1.00
-    ## 4         40.76003            1         4.5   0.0     0.5       1.05
-    ## 5         40.76984            2        10.0   0.5     0.5       0.00
-    ## 6         40.73620            2        16.5   0.5     0.5       0.00
+    ## 1             40.8            1        11.5   0.0     0.5       3.00
+    ## 2             40.7            1        19.5   0.5     0.5       5.20
+    ## 3             40.8            1        10.0   0.5     0.5       1.00
+    ## 4             40.8            1         4.5   0.0     0.5       1.05
+    ## 5             40.8            2        10.0   0.5     0.5       0.00
+    ## 6             40.7            2        16.5   0.5     0.5       0.00
     ##   tolls_amount improvement_surcharge total_amount pickup_hour pickup_dow
     ## 1            0                   0.3        15.30    6PM-10PM        Sat
     ## 2            0                   0.3        26.00    6PM-10PM        Sat
@@ -340,7 +385,8 @@ We run one last test before applying the transformation. Recall that `rxDataStep
 head(rxDataStep(nyc_sample, transformFunc = xforms, transformPackages = "lubridate"))
 ```
 
-    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.028 seconds
+    ## 
+    Rows Processed: 1000
 
     ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
     ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20
@@ -350,19 +396,19 @@ head(rxDataStep(nyc_sample, transformFunc = xforms, transformPackages = "lubrida
     ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60
     ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11
     ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1        -73.95630        40.78182            1         -73.98237
-    ## 2        -73.97758        40.74229            1         -73.98560
-    ## 3        -73.98280        40.73094            1         -73.95458
-    ## 4        -73.96043        40.76635            1         -73.95851
-    ## 5        -73.99337        40.74152            1         -73.99491
-    ## 6        -73.97186        40.75442            1         -74.00585
+    ## 1              -74            40.8            1               -74
+    ## 2              -74            40.7            1               -74
+    ## 3              -74            40.7            1               -74
+    ## 4              -74            40.8            1               -74
+    ## 5              -74            40.7            1               -74
+    ## 6              -74            40.8            1               -74
     ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1         40.77283            1        11.5   0.0     0.5       3.00
-    ## 2         40.68565            1        19.5   0.5     0.5       5.20
-    ## 3         40.76549            1        10.0   0.5     0.5       1.00
-    ## 4         40.76003            1         4.5   0.0     0.5       1.05
-    ## 5         40.76984            2        10.0   0.5     0.5       0.00
-    ## 6         40.73620            2        16.5   0.5     0.5       0.00
+    ## 1             40.8            1        11.5   0.0     0.5       3.00
+    ## 2             40.7            1        19.5   0.5     0.5       5.20
+    ## 3             40.8            1        10.0   0.5     0.5       1.00
+    ## 4             40.8            1         4.5   0.0     0.5       1.05
+    ## 5             40.8            2        10.0   0.5     0.5       0.00
+    ## 6             40.7            2        16.5   0.5     0.5       0.00
     ##   tolls_amount improvement_surcharge total_amount pickup_hour pickup_dow
     ## 1            0                   0.3        15.30    6PM-10PM        Sat
     ## 2            0                   0.3        26.00    6PM-10PM        Sat
@@ -386,13 +432,25 @@ rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE, transformFunc = xforms,
            transformPackages = "lubridate")
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 6.303 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 6.200 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 5.893 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 6.063 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 6.035 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 5.934 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 5.919 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 6.021 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 6.016 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 5.956 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 5.792 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 5.819 seconds
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 Sys.time() - st
 ```
 
-    ## Time difference of 1.213235 mins
+    ## Time difference of 1.24 mins
 
 Examining the new columns
 -------------------------
@@ -408,19 +466,19 @@ We use the same *formula notation* used by many other R modeling or plotting fun
 rxs1 <- rxSummary( ~ pickup_hour + pickup_dow + trip_duration, nyc_xdf)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.028 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.029 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.027 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.024 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.029 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.026 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.027 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.029 seconds 
-    ## Computation time: 0.342 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 # we can add a column for proportions next to the counts
@@ -437,14 +495,14 @@ rxs1
     ##     trip_duration
     ## Data: nyc_xdf (RxXdfData Data Source)
     ## File name: C:/Data/NYC_taxi/yellow_tripsample_2016.xdf
-    ## Number of valid observations: 6e+06 
+    ## Number of valid observations: 6000000 
     ##  
-    ##  Name          Mean     StdDev   Min        Max      ValidObs MissingObs
-    ##  trip_duration 852.8945 257844.9 -631147949 11122910 6e+06    0         
+    ##  Name          Mean StdDev Min        Max      ValidObs MissingObs
+    ##  trip_duration 853  257845 -631147949 11122910 6000000  0         
     ## 
     ## Category Counts for pickup_hour
     ## Number of categories: 7
-    ## Number of valid observations: 6e+06
+    ## Number of valid observations: 6000000
     ## Number of missing observations: 0
     ## 
     ##  pickup_hour Counts  prop
@@ -458,7 +516,7 @@ rxs1
     ## 
     ## Category Counts for pickup_dow
     ## Number of categories: 7
-    ## Number of valid observations: 6e+06
+    ## Number of valid observations: 6000000
     ## Number of missing observations: 0
     ## 
     ##  pickup_dow Counts prop
@@ -476,19 +534,19 @@ Separating two variables by a colon $\`pickup\_dow:pickup\_hour\`$ instead of a 
 rxs2 <- rxSummary( ~ pickup_dow:pickup_hour, nyc_xdf)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.013 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.017 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.022 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.017 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.017 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.020 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.020 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.017 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.017 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.020 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.018 seconds 
-    ## Computation time: 0.242 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 rxs2 <- tidyr::spread(rxs2$categorical[[1]], key = 'pickup_hour', value = 'Counts')
@@ -513,7 +571,7 @@ levelplot(prop.table(rxs2, 2), cuts = 4, xlab = "", ylab = "",
           main = "Distribution of taxis by day of week")
 ```
 
-![](rendered/images/chap03chunk13-1.png)
+![](../images/chap03chunk13-1.png)
 
 Interesting results manifest themselves in the above plot:
 
@@ -532,7 +590,7 @@ We begin by plotting a map of Manhattan neighborhoods, so we can see the neighbo
 library(rgeos)
 library(maptools)
 
-nyc_shapefile <- readShapePoly('ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
+nyc_shapefile <- readShapePoly('../ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
 library(stringr)
 mht_shapefile <- subset(nyc_shapefile, str_detect(CITY, 'New York City-Manhattan'))
 
@@ -556,7 +614,7 @@ library(ggrepel)
   geom_text_repel(aes(label = id), data = mht.cent, size = 3)
 ```
 
-![](rendered/images/chap03chunk14-1.png)
+![](../images/chap03chunk14-1.png)
 
 ### Exercises
 
@@ -593,19 +651,19 @@ head(nyc_sample)
     ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60
     ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11
     ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1        -73.95630        40.78182            1         -73.98237
-    ## 2        -73.97758        40.74229            1         -73.98560
-    ## 3        -73.98280        40.73094            1         -73.95458
-    ## 4        -73.96043        40.76635            1         -73.95851
-    ## 5        -73.99337        40.74152            1         -73.99491
-    ## 6        -73.97186        40.75442            1         -74.00585
+    ## 1              -74            40.8            1               -74
+    ## 2              -74            40.7            1               -74
+    ## 3              -74            40.7            1               -74
+    ## 4              -74            40.8            1               -74
+    ## 5              -74            40.7            1               -74
+    ## 6              -74            40.8            1               -74
     ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1         40.77283            1        11.5   0.0     0.5       3.00
-    ## 2         40.68565            1        19.5   0.5     0.5       5.20
-    ## 3         40.76549            1        10.0   0.5     0.5       1.00
-    ## 4         40.76003            1         4.5   0.0     0.5       1.05
-    ## 5         40.76984            2        10.0   0.5     0.5       0.00
-    ## 6         40.73620            2        16.5   0.5     0.5       0.00
+    ## 1             40.8            1        11.5   0.0     0.5       3.00
+    ## 2             40.7            1        19.5   0.5     0.5       5.20
+    ## 3             40.8            1        10.0   0.5     0.5       1.00
+    ## 4             40.8            1         4.5   0.0     0.5       1.05
+    ## 5             40.8            2        10.0   0.5     0.5       0.00
+    ## 6             40.7            2        16.5   0.5     0.5       0.00
     ##   tolls_amount improvement_surcharge total_amount pickup_state
     ## 1            0                   0.3        15.30           NY
     ## 2            0                   0.3        26.00           NY
@@ -649,7 +707,8 @@ head(rxDataStep(nyc_sample,
                 transformObjects = list(shapefile = mht_shapefile)))
 ```
 
-    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.004 seconds
+    ## 
+    Rows Processed: 1000
 
     ## NULL
 
@@ -672,7 +731,19 @@ rxDataStep(nyc_xdf, nyc_xdf,
   overwrite = TRUE)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 4.068 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 3.466 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 3.839 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 3.946 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 4.233 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 4.032 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 4.148 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 3.943 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 4.235 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 3.963 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 5.526 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 4.822 seconds
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 1.  Because we want to apply the transformation to the large data `nyc_xdf`, we need to make sure that we don't add unnecessary columns and that the columns have the appropriate types.
 
@@ -727,7 +798,8 @@ head(rxDataStep(nyc_sample, transformFunc = find_nhoods,
                 transformObjects = list(shapefile = nyc_shapefile)))
 ```
 
-    ## Rows Read: 1000, Total Rows Processed: 1000, Total Chunk Time: 0.073 seconds
+    ## 
+    Rows Processed: 1000
 
     ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
     ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20
@@ -737,19 +809,19 @@ head(rxDataStep(nyc_sample, transformFunc = find_nhoods,
     ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60
     ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11
     ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1        -73.95630        40.78182            1         -73.98237
-    ## 2        -73.97758        40.74229            1         -73.98560
-    ## 3        -73.98280        40.73094            1         -73.95458
-    ## 4        -73.96043        40.76635            1         -73.95851
-    ## 5        -73.99337        40.74152            1         -73.99491
-    ## 6        -73.97186        40.75442            1         -74.00585
+    ## 1              -74            40.8            1               -74
+    ## 2              -74            40.7            1               -74
+    ## 3              -74            40.7            1               -74
+    ## 4              -74            40.8            1               -74
+    ## 5              -74            40.7            1               -74
+    ## 6              -74            40.8            1               -74
     ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1         40.77283            1        11.5   0.0     0.5       3.00
-    ## 2         40.68565            1        19.5   0.5     0.5       5.20
-    ## 3         40.76549            1        10.0   0.5     0.5       1.00
-    ## 4         40.76003            1         4.5   0.0     0.5       1.05
-    ## 5         40.76984            2        10.0   0.5     0.5       0.00
-    ## 6         40.73620            2        16.5   0.5     0.5       0.00
+    ## 1             40.8            1        11.5   0.0     0.5       3.00
+    ## 2             40.7            1        19.5   0.5     0.5       5.20
+    ## 3             40.8            1        10.0   0.5     0.5       1.00
+    ## 4             40.8            1         4.5   0.0     0.5       1.05
+    ## 5             40.8            2        10.0   0.5     0.5       0.00
+    ## 6             40.7            2        16.5   0.5     0.5       0.00
     ##   tolls_amount improvement_surcharge total_amount pickup_state
     ## 1            0                   0.3        15.30           NY
     ## 2            0                   0.3        26.00           NY
@@ -796,20 +868,32 @@ rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE,
            transformObjects = list(shapefile = nyc_shapefile))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 13.456 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 13.644 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 13.139 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 12.309 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 12.975 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 11.957 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 13.224 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 12.414 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 13.283 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 13.383 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 14.519 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 13.456 seconds
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 Sys.time() - st
 ```
 
-    ## Time difference of 2.6505 mins
+    ## Time difference of 2.82 mins
 
 ``` r
 rxGetInfo(nyc_xdf, numRows = 5)
 ```
 
     ## File name: C:\Data\NYC_taxi\yellow_tripsample_2016.xdf 
-    ## Number of observations: 6e+06 
+    ## Number of observations: 6000000 
     ## Number of variables: 27 
     ## Number of blocks: 12 
     ## Compression type: zlib 
@@ -821,17 +905,17 @@ rxGetInfo(nyc_xdf, numRows = 5)
     ## 4 2016-06-12 20:13:12 2016-06-12 20:18:53               5          2.23
     ## 5 2016-06-10 23:40:21 2016-06-11 00:05:14               3          2.72
     ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1        -73.97750        40.74949     standard         -73.98100
-    ## 2        -73.96890        40.80114     standard         -73.98331
-    ## 3        -73.98932        40.71869     standard         -73.96317
-    ## 4        -73.98183        40.77286     standard         -73.95563
-    ## 5        -74.00858        40.74144     standard         -73.98224
+    ## 1              -74            40.7     standard               -74
+    ## 2              -74            40.8     standard               -74
+    ## 3              -74            40.7     standard               -74
+    ## 4              -74            40.8     standard               -74
+    ## 5              -74            40.7     standard               -74
     ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1         40.74445         card         3.0   0.5     0.5       0.86
-    ## 2         40.75087         cash        21.5   0.0     0.5       0.00
-    ## 3         40.71445         card         9.0   0.5     0.5       1.50
-    ## 4         40.78540         card         8.0   0.5     0.5       2.79
-    ## 5         40.72152         card        17.0   0.5     0.5       3.66
+    ## 1             40.7         card         3.0   0.5     0.5       0.86
+    ## 2             40.8         cash        21.5   0.0     0.5       0.00
+    ## 3             40.7         card         9.0   0.5     0.5       1.50
+    ## 4             40.8         card         8.0   0.5     0.5       2.79
+    ## 5             40.7         card        17.0   0.5     0.5       3.66
     ##   tolls_amount improvement_surcharge total_amount tip_percent pickup_hour
     ## 1            0                   0.3         5.16          29    6PM-10PM
     ## 2            0                   0.3        22.30           0     5AM-9AM

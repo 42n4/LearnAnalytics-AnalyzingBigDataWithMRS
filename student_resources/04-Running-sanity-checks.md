@@ -1,7 +1,7 @@
 Running sanity checks
 ================
 Seth Mottaghinejad
-2017-02-08
+2017-02-17
 
 In addition to asking whether the data makes logical sense, it's often a good idea to also check whether the data makes business sense or practical sense. Doing so can help us catch certain errors in the data such as data being mislabeled or attributed to the wrong set of features. If unaccounted, such soft errors can have a profound impact on the analysis.
 
@@ -19,22 +19,22 @@ By passing `~ .` as the formula to `rxSummary`, we can summarize all the columns
 system.time(rxs_all <- rxSummary( ~ ., nyc_xdf) )
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.526 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.552 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.526 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.599 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.582 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.592 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.567 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.595 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.572 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.566 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.585 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.568 seconds 
-    ## Computation time: 7.200 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
     ##    user  system elapsed 
-    ##    0.02    0.00    7.22
+    ##    0.02    0.00    8.22
 
 For example, the numeric summaries for the relevant columns in the data are stored in `rxs_all` under the element called `sDataFrame`.
 
@@ -42,20 +42,13 @@ For example, the numeric summaries for the relevant columns in the data are stor
 head(rxs_all$sDataFrame)
 ```
 
-    ##               Name       Mean      StdDev       Min          Max ValidObs
-    ## 1  pickup_datetime         NA          NA        NA           NA    0e+00
-    ## 2 dropoff_datetime         NA          NA        NA           NA    0e+00
-    ## 3  passenger_count   1.660809    1.310673    0.0000 9.000000e+00    6e+06
-    ## 4    trip_distance   3.805193 1131.696858    0.0000 1.674368e+06    6e+06
-    ## 5 pickup_longitude -72.917826    8.773957 -121.9337 0.000000e+00    6e+06
-    ## 6  pickup_latitude  40.169355    4.833384    0.0000 5.726928e+01    6e+06
-    ##   MissingObs
-    ## 1          0
-    ## 2          0
-    ## 3          0
-    ## 4          0
-    ## 5          0
-    ## 6          0
+    ##               Name   Mean  StdDev  Min       Max ValidObs MissingObs
+    ## 1  pickup_datetime     NA      NA   NA        NA        0          0
+    ## 2 dropoff_datetime     NA      NA   NA        NA        0          0
+    ## 3  passenger_count   1.66    1.31    0       9.0  6000000          0
+    ## 4    trip_distance   3.81 1131.70    0 1674367.7  6000000          0
+    ## 5 pickup_longitude -72.92    8.77 -122       0.0  6000000          0
+    ## 6  pickup_latitude  40.17    4.83    0      57.3  6000000          0
 
 If we wanted one-way tables showing counts of levels for each `factor` column in the data, we can refer to `rxs_all` to obtain that, but if we need to get two-way tables showing counts of combinations of certain `factor` columns with others we need to pass the correct formula to the summary function. Here we use `rxCrossTabs` to get the number of trips from one neighborhood going into another.
 
@@ -63,19 +56,19 @@ If we wanted one-way tables showing counts of levels for each `factor` column in
 nhoods_by_borough <- rxCrossTabs( ~ pickup_nhood:pickup_borough, nyc_xdf)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.015 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.016 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.015 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.017 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.018 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.014 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.015 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.017 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.015 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.015 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.019 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.014 seconds 
-    ## Computation time: 0.200 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 nhoods_by_borough <- nhoods_by_borough$counts[[1]]
@@ -168,25 +161,37 @@ rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE,
            transformObjects = list(nhoods_levels = manhattan_nhoods))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 5.554 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 5.087 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 4.604 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 4.588 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 4.460 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 4.194 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 4.483 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 4.248 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 4.611 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 4.434 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 4.587 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 4.291 seconds
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 rxs_pickdrop <- rxSummary( ~ pickup_nb:dropoff_nb, nyc_xdf)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.014 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.020 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.024 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.023 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.026 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.026 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.028 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.023 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.022 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.020 seconds 
-    ## Computation time: 0.297 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 head(rxs_pickdrop$categorical[[1]])
@@ -216,10 +221,21 @@ rxHistogram( ~ trip_distance, nyc_xdf, startVal = 0, endVal = 25,
             histType = "Percent", numBreaks = 20)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.171 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.245 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.176 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.246 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.183 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.180 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.476 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.164 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.165 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.162 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.162 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.226 seconds 
-    ## Computation time: 2.576 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
-![](rendered/images/chap04chunk06-1.png)
+![](../images/chap04chunk06-1.png)
 
 There is a second peak around around trips that traveled between 16 and 20, which is worth examining further. We can verify this by looking at which neighborhoods passengers are traveling from and to.
 
@@ -228,8 +244,19 @@ rxs <- rxSummary( ~ pickup_nhood:dropoff_nhood, nyc_xdf,
                  rowSelection = (trip_distance > 15 & trip_distance < 22))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.057 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.057 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.057 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.058 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.058 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.057 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.060 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.095 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.101 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.070 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.071 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.084 seconds 
-    ## Computation time: 0.936 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 library(dplyr)
@@ -265,13 +292,25 @@ odd_trips <- rxDataStep(nyc_xdf,
   transforms = list(u = runif(.rxNumRows)))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 2.286 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 3.104 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 3.057 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 2.709 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 3.196 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 2.913 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 3.143 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 2.804 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 3.218 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 2.704 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 3.170 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 2.697 seconds
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 ``` r
 print(dim(odd_trips))
 ```
 
-    ## [1] 13350    30
+    ## [1] 13377    30
 
 Since the dataset with the candidate outliers is a `data.frame`, we can use any R function to examine it. For example, we limit `odd_trips` to cases where a distance of more than 20 miles was traveled, plot a histogram of the fare amount the passenger paid, and color it based on whether the trip took more or less than 10 minutes.
 
@@ -286,7 +325,7 @@ p + geom_histogram(aes(x = fare_amount, fill = trip_duration <= 10*60), binwidth
   coord_fixed(ratio = .5)
 ```
 
-![](rendered/images/chap04chunk09-1.png)
+![](../images/chap04chunk09-1.png)
 
 As we can see, the majority of trips that traveled over 50 miles cost nothing or next to nothing, even though most of these trips took 10 minutes or longer. It is unclear whether such trips were the result of machine error human error, but if for example this analysis was targeted at the company that owns the taxis, this finding would warrant more investigation.
 
@@ -299,10 +338,21 @@ rxHistogram( ~ trip_distance, nyc_xdf, startVal = 0, endVal = 25,
             histType = "Percent", numBreaks = 20)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.164 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.162 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.214 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.227 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.209 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.267 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.215 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.202 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.173 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.168 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.189 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.165 seconds 
-    ## Computation time: 2.373 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
-![](rendered/images/chap04chunk10-1.png)
+![](../images/chap04chunk10-1.png)
 
 1.  Modify the formula in the line above so that we get a separate histogram for each combination of `pickup_hour` and `payment_type`.
 
@@ -328,10 +378,21 @@ rxHistogram( ~ trip_distance | pickup_hour + payment_type, nyc_xdf, startVal = 0
             endVal = 25, histType = "Percent", numBreaks = 20)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.176 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.184 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.261 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.271 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.255 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.242 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.212 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.185 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.211 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.181 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.178 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.181 seconds 
-    ## Computation time: 2.576 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
-![](rendered/images/chap04chunk12-1.png)
+![](../images/chap04chunk12-1.png)
 
 1.  We have a choice here between two options:
 
@@ -348,18 +409,18 @@ rxHistogram( ~ trip_dist | pickup_hour + payment_type, nyc_xdf,
                                               labels = c("0", "<5", "5-10", "10+"))))
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 0.021 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 0.024 seconds
-    ## Rows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 0.022 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 0.025 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 0.021 seconds
-    ## Rows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 0.023 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 0.021 seconds
-    ## Rows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 0.021 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 0.022 seconds
-    ## Rows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 0.024 seconds
-    ## Rows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 0.022 seconds 
-    ## Computation time: 0.281 seconds.
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
-![](rendered/images/chap04chunk13-1.png)
+![](../images/chap04chunk13-1.png)

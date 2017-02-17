@@ -1,7 +1,7 @@
 Clustering example
 ================
 Seth Mottaghinejad
-2017-02-08
+2017-02-17
 
 Many times we don't necessarily have to resort to using the whole dataset to extract insights from the data. In other words, we really only have a big data problem when using the whole dataset versus a much smaller sample of the data can make a big difference in insight. Even when we do have a big data problem, sampling can be an effective way to gain some preliminary insights into the problem or to speed up the algorithm.
 
@@ -34,7 +34,19 @@ rxDataStep(nyc_xdf, mht_xdf,
   overwrite = TRUE)
 ```
 
-    ## Rows Read: 500000, Total Rows Processed: 500000, Total Chunk Time: 3.277 secondsRows Read: 500000, Total Rows Processed: 1000000, Total Chunk Time: 3.059 secondsRows Read: 500000, Total Rows Processed: 1500000, Total Chunk Time: 3.331 secondsRows Read: 500000, Total Rows Processed: 2000000, Total Chunk Time: 3.134 secondsRows Read: 500000, Total Rows Processed: 2500000, Total Chunk Time: 3.089 secondsRows Read: 500000, Total Rows Processed: 3000000, Total Chunk Time: 3.065 secondsRows Read: 500000, Total Rows Processed: 3500000, Total Chunk Time: 3.099 secondsRows Read: 500000, Total Rows Processed: 4000000, Total Chunk Time: 3.109 secondsRows Read: 500000, Total Rows Processed: 4500000, Total Chunk Time: 3.432 secondsRows Read: 500000, Total Rows Processed: 5000000, Total Chunk Time: 3.284 secondsRows Read: 500000, Total Rows Processed: 5500000, Total Chunk Time: 3.096 secondsRows Read: 500000, Total Rows Processed: 6000000, Total Chunk Time: 3.116 seconds
+    ## 
+    Rows Processed: 500000
+    Rows Processed: 1000000
+    Rows Processed: 1500000
+    Rows Processed: 2000000
+    Rows Processed: 2500000
+    Rows Processed: 3000000
+    Rows Processed: 3500000
+    Rows Processed: 4000000
+    Rows Processed: 4500000
+    Rows Processed: 5000000
+    Rows Processed: 5500000
+    Rows Processed: 6000000
 
 And since we limited the scope of the data, it might be a good idea to create a sample of the new data (as a `data.frame`). Our last sample, `nyc_sample` was not a good sample, since we only took the top 1000 rows of the data. This time, we use `rxDataStep` to create a random sample of the data, containing only 1 percent of the rows from the larger dataset.
 
@@ -42,13 +54,25 @@ And since we limited the scope of the data, it might be a good idea to create a 
 mht_sample <- rxDataStep(mht_xdf, rowSelection = (u < .01), transforms = list(u = runif(.rxNumRows)))
 ```
 
-    ## Rows Read: 412183, Total Rows Processed: 412183, Total Chunk Time: 2.439 secondsRows Read: 412015, Total Rows Processed: 824198, Total Chunk Time: 2.704 secondsRows Read: 410320, Total Rows Processed: 1234518, Total Chunk Time: 2.729 secondsRows Read: 410440, Total Rows Processed: 1644958, Total Chunk Time: 1.685 secondsRows Read: 414263, Total Rows Processed: 2059221, Total Chunk Time: 2.967 secondsRows Read: 413976, Total Rows Processed: 2473197, Total Chunk Time: 1.662 secondsRows Read: 413956, Total Rows Processed: 2887153, Total Chunk Time: 2.989 secondsRows Read: 414679, Total Rows Processed: 3301832, Total Chunk Time: 1.675 secondsRows Read: 418308, Total Rows Processed: 3720140, Total Chunk Time: 3.010 secondsRows Read: 418648, Total Rows Processed: 4138788, Total Chunk Time: 1.746 secondsRows Read: 415550, Total Rows Processed: 4554338, Total Chunk Time: 2.998 secondsRows Read: 415475, Total Rows Processed: 4969813, Total Chunk Time: 1.664 seconds
+    ## 
+    Rows Processed: 412183
+    Rows Processed: 824198
+    Rows Processed: 1234518
+    Rows Processed: 1644958
+    Rows Processed: 2059221
+    Rows Processed: 2473197
+    Rows Processed: 2887153
+    Rows Processed: 3301832
+    Rows Processed: 3720140
+    Rows Processed: 4138788
+    Rows Processed: 4554338
+    Rows Processed: 4969813
 
 ``` r
 dim(mht_sample)
 ```
 
-    ## [1] 49603    22
+    ## [1] 50060    22
 
 Visualizing the data
 --------------------
@@ -75,7 +99,7 @@ library(gridExtra)
 grid.arrange(q1, q2, ncol = 2)
 ```
 
-![](rendered/images/chap05chunk04-1.png)
+![](../images/chap05chunk04-1.png)
 
 Creating clusters
 -----------------
@@ -93,7 +117,7 @@ rxkm_sample <- kmeans(xydata, centers = 300, iter.max = 2000, nstart = 50)
 Sys.time() - start_time
 ```
 
-    ## Time difference of 31.67137 secs
+    ## Time difference of 30.5 secs
 
 ``` r
 # we need to put the centroids back into the original scale for coordinates
@@ -104,13 +128,13 @@ centroids_sample <- rxkm_sample$centers %>%
 head(centroids_sample)
 ```
 
-    ##        long      lat size
-    ## 1 -73.98754 40.77662  125
-    ## 2 -73.94881 40.77969  160
-    ## 3 -73.94383 40.83615   79
-    ## 4 -73.98433 40.76026  261
-    ## 5 -73.98593 40.77934  166
-    ## 6 -73.98473 40.76623  220
+    ##   long  lat size
+    ## 1  -74 40.8  192
+    ## 2  -74 40.8  148
+    ## 3  -74 40.8  179
+    ## 4  -74 40.8  200
+    ## 5  -74 40.8  155
+    ## 6  -74 40.7  124
 
 In the above code chunk we used the `kmeans` function to cluster the sample dataset `mht_sample`. In `RevoScaleR`, there is a counterpart to the `kmeans` function called `rxKmeans`, but in addition to working with a `data.frame`, `rxKmeans` also works with XDF files. We can therefore use `rxKmeans` to create clusters from the whole data instead of the sample represented by `mht_sample`.
 
@@ -122,10 +146,16 @@ rxkm <- rxKmeans( ~ long_std + lat_std, data = mht_xdf, outFile = mht_xdf,
                                    lat_std = dropoff_latitude / 40), 
                  blocksPerRead = 1, overwrite = TRUE, maxIterations = 100, 
                  reportProgress = -1)
+```
+
+    ## 
+    ## Warning: The algorithm did not converge in 100 iterations
+
+``` r
 Sys.time() - start_time
 ```
 
-    ## Time difference of 16.95346 mins
+    ## Time difference of 19.8 mins
 
 ``` r
 clsdf <- cbind(
@@ -135,13 +165,13 @@ size = rxkm$size, withinss = rxkm$withinss)
 head(clsdf)
 ```
 
-    ##        long      lat  size     withinss
-    ## 1 -73.98757 40.77699 12517 9.722303e-06
-    ## 2 -73.94913 40.77911 13096 7.840364e-06
-    ## 3 -73.94344 40.83556  7866 2.988459e-05
-    ## 4 -73.98434 40.76028 26413 8.957008e-06
-    ## 5 -73.98582 40.77943 13621 1.009985e-05
-    ## 6 -73.98754 40.76776 20739 1.814311e-05
+    ##   long  lat  size   withinss
+    ## 1  -74 40.8 22906 0.00001394
+    ## 2  -74 40.8 13954 0.00000977
+    ## 3  -74 40.8 22321 0.00000729
+    ## 4  -74 40.8 21935 0.00001220
+    ## 5  -74 40.8 15193 0.00000470
+    ## 6  -74 40.7 13196 0.00000574
 
 With a little bit of work, we can extract the cluster centroids from the resulting object and plot them on a similar map. As we can see, the results are not very different, however differences do exist and depending on the use case, such small differences can have a lot of practical significance. If for example we wanted to find out which spots taxis are more likely to drop off passengers and make it illegal for street vendors to operate at those spots (in order to avoid creating too much traffic), we can do a much better job of narrowing down the spots using the clusters created from the whole data.
 
@@ -167,7 +197,7 @@ library(gridExtra)
 grid.arrange(q1, q2, ncol = 2)
 ```
 
-![](rendered/images/chap05chunk07-1.png)
+![](../images/chap05chunk07-1.png)
 
 ### Exercises
 
@@ -184,7 +214,7 @@ kmeans_nclus <- kmeans(xydata, centers = nclus, iter.max = 2000, nstart = 1)
 sum(kmeans_nclus$withinss)
 ```
 
-    ## [1] 0.0002098242
+    ## [1] 0.000216
 
 The number we extracted is the sum of the within-cluster sum of squares for each cluster. The **within-cluster sum of squares** (WSSs for short) is a measure of how much variability there is within each cluster. A lower WSSs indicates a more homogeneous cluster. However, we don't care about this metric per cluster. We simply seek the all the clusters' WSSs. When the number of clusters we build is small, individual clusters are less homogeneous, making the total WSSs larger. When we build a large number of clusters, the opposite is true. Therefore, total WSSs generally drops as `nclus` increases, but there is a point beyond which increasing `nclus` results in smaller and smaller drops in total WSSs. In other words, a point beyond which building a higher number of clusters is not worth the cost of increased complexity (as having more clusters makes it hard to tell them apart).
 
@@ -211,9 +241,9 @@ res
 find_wss(nclus = 10, x = xydata, iter.max = 500, nstart = 1)
 ```
 
-    ## [1] "nclus = 10, runtime = 0.22 seconds"
+    ## [1] "nclus = 10, runtime = 0.16 seconds"
 
-    ## [1] 0.001282821
+    ## [1] 0.00127
 
 1.  We use `sapply` to run the above function in a loop. This makes the notation more clean and easy to modify. We then use `ggplot2` to plot the results. Another interesting to notice is that `nclus` goes up, the function takes longer and longer to run. This has implications on building the clusters on the whole data: the number of clusters we want to build can significantly add to the runtime.
 
@@ -221,26 +251,26 @@ find_wss(nclus = 10, x = xydata, iter.max = 500, nstart = 1)
 wss <- sapply(nclus_seq, find_wss, x = xydata, iter.max = 500, nstart = 1)
 ```
 
-    ## [1] "nclus = 20, runtime = 0.22 seconds"
-    ## [1] "nclus = 70, runtime = 0.47 seconds"
-    ## [1] "nclus = 120, runtime = 0.66 seconds"
-    ## [1] "nclus = 170, runtime = 0.42 seconds"
-    ## [1] "nclus = 220, runtime = 0.69 seconds"
-    ## [1] "nclus = 270, runtime = 0.56 seconds"
-    ## [1] "nclus = 320, runtime = 0.69 seconds"
-    ## [1] "nclus = 370, runtime = 0.64 seconds"
-    ## [1] "nclus = 420, runtime = 0.85 seconds"
-    ## [1] "nclus = 470, runtime = 0.93 seconds"
-    ## [1] "nclus = 520, runtime = 0.84 seconds"
-    ## [1] "nclus = 570, runtime = 0.91 seconds"
-    ## [1] "nclus = 620, runtime = 0.95 seconds"
-    ## [1] "nclus = 670, runtime = 0.84 seconds"
-    ## [1] "nclus = 720, runtime = 1.13 seconds"
-    ## [1] "nclus = 770, runtime = 1.08 seconds"
-    ## [1] "nclus = 820, runtime = 1.16 seconds"
-    ## [1] "nclus = 870, runtime = 1.28 seconds"
-    ## [1] "nclus = 920, runtime = 1.40 seconds"
-    ## [1] "nclus = 970, runtime = 1.29 seconds"
+    ## [1] "nclus = 20, runtime = 0.26 seconds"
+    ## [1] "nclus = 70, runtime = 0.30 seconds"
+    ## [1] "nclus = 120, runtime = 0.41 seconds"
+    ## [1] "nclus = 170, runtime = 0.50 seconds"
+    ## [1] "nclus = 220, runtime = 0.49 seconds"
+    ## [1] "nclus = 270, runtime = 0.58 seconds"
+    ## [1] "nclus = 320, runtime = 0.62 seconds"
+    ## [1] "nclus = 370, runtime = 0.65 seconds"
+    ## [1] "nclus = 420, runtime = 0.62 seconds"
+    ## [1] "nclus = 470, runtime = 0.78 seconds"
+    ## [1] "nclus = 520, runtime = 0.78 seconds"
+    ## [1] "nclus = 570, runtime = 0.73 seconds"
+    ## [1] "nclus = 620, runtime = 0.88 seconds"
+    ## [1] "nclus = 670, runtime = 1.11 seconds"
+    ## [1] "nclus = 720, runtime = 1.18 seconds"
+    ## [1] "nclus = 770, runtime = 1.24 seconds"
+    ## [1] "nclus = 820, runtime = 1.18 seconds"
+    ## [1] "nclus = 870, runtime = 1.23 seconds"
+    ## [1] "nclus = 920, runtime = 1.28 seconds"
+    ## [1] "nclus = 970, runtime = 1.33 seconds"
 
 ``` r
 library(ggplot2)
@@ -250,6 +280,6 @@ ggplot(aes(x = x, y = y), data = data.frame(x = nclus_seq, y = wss)) +
   ylab("within clusters sum of squares")
 ```
 
-![](rendered/images/chap05chunk11-1.png)
+![](../images/chap05chunk11-1.png)
 
 As the plot shows, around 250 clusters, total WSSs starts to decrease very slowly.

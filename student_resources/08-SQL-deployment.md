@@ -1,7 +1,7 @@
 Scaling and deployment
 ================
 Seth Mottaghinejad
-2017-02-10
+2017-02-17
 
 Once a model is built, we're usually interested in using it to make predictions on future data, a process sometimes referred to as **scoring**. This is not very different from how we used the model in the last section to make predictions on the test data using the `rxPredict` function. But future data may be sitting in a different environment from the one used to develop the model.
 
@@ -26,7 +26,7 @@ Deploying to SQL Server
 
 A basic overview of the SQL Server R Services architecture can be found [here](https://msdn.microsoft.com/en-us/library/mt604885.aspx). Let's point to a SQL table containing a copy of the NYC Taxi dataset. The first thing we need to do is set up a SQL Server *connection string*, which contains our SQL login credentials. Since the connection string contains sensitive information, it is usually stored in a file in a restricted location and read from R, but in our example we will simply hard-code the connection string and store it in `sqlConnString`. Assume, the NYC Taxi dataset is stored in a table called `NYCTaxiSmall` inside the `RDB` database that the connection string points to. The last thing left for us to do is to point to the table, which we do with the `RxSqlServerData` function. This is the equivalent of `RxXdfData` when pointing to an XDF file stored on disk.
 
-To run the examples in this chapter, we need SQL Server 2016 with R Services installed (the stand-alone R Server is not needed). Instructions are shown [here](https://msdn.microsoft.com/en-us/microsoft-r/scaler-distributed-computing). Once R Services is installed we need to enable it by running the following script:
+To run the examples in this chapter, we need SQL Server 2016 with R Services installed (the stand-alone R Server is not needed). Instructions are shown [here](https://msdn.microsoft.com/en-us/library/mt696069.aspx). Once R Services is installed we need to enable it by running the following script:
 
 ``` sql
 -- let's enable external scripts so that SQL Server can make calls to the R server
@@ -133,69 +133,69 @@ system.time(
 )
 ```
 
-    ## Total Rows written: 100000, Total time: 6.31
-    ## Total Rows written: 200000, Total time: 10.914
-    ## Total Rows written: 300000, Total time: 14.87
-    ## Total Rows written: 400000, Total time: 18.936
-    ## Total Rows written: 412183, Total time: 19.342
-    ## Total Rows written: 100000, Total time: 3.876
-    ## Total Rows written: 200000, Total time: 7.732
-    ## Total Rows written: 300000, Total time: 11.614
-    ## Total Rows written: 400000, Total time: 15.44
-    ## Total Rows written: 412015, Total time: 15.845
-    ## Total Rows written: 100000, Total time: 5.392
-    ## Total Rows written: 200000, Total time: 11.046
-    ## Total Rows written: 300000, Total time: 16.638
-    ## Total Rows written: 400000, Total time: 22.227
-    ## Total Rows written: 410320, Total time: 22.659
-    ## Total Rows written: 100000, Total time: 5.405
-    ## Total Rows written: 200000, Total time: 10.721
-    ## Total Rows written: 300000, Total time: 16.024
-    ## Total Rows written: 400000, Total time: 21.214
-    ## Total Rows written: 410440, Total time: 21.633
-    ## Total Rows written: 100000, Total time: 4.923
-    ## Total Rows written: 200000, Total time: 10.37
-    ## Total Rows written: 300000, Total time: 15.805
-    ## Total Rows written: 400000, Total time: 21.139
-    ## Total Rows written: 414263, Total time: 21.619
-    ## Total Rows written: 100000, Total time: 5.171
-    ## Total Rows written: 200000, Total time: 10.639
-    ## Total Rows written: 300000, Total time: 15.726
-    ## Total Rows written: 400000, Total time: 20.967
-    ## Total Rows written: 413976, Total time: 21.857
-    ## Total Rows written: 100000, Total time: 5.605
-    ## Total Rows written: 200000, Total time: 11.196
-    ## Total Rows written: 300000, Total time: 16.773
-    ## Total Rows written: 400000, Total time: 22.214
-    ## Total Rows written: 413956, Total time: 22.773
-    ## Total Rows written: 100000, Total time: 4.876
-    ## Total Rows written: 200000, Total time: 9.768
-    ## Total Rows written: 300000, Total time: 18.836
-    ## Total Rows written: 400000, Total time: 23.988
-    ## Total Rows written: 414679, Total time: 24.516
-    ## Total Rows written: 100000, Total time: 5.291
-    ## Total Rows written: 200000, Total time: 10.807
-    ## Total Rows written: 300000, Total time: 16.004
-    ## Total Rows written: 400000, Total time: 21.731
-    ## Total Rows written: 418308, Total time: 22.687
-    ## Total Rows written: 100000, Total time: 5.132
+    ## Total Rows written: 100000, Total time: 4.96
+    ## Total Rows written: 200000, Total time: 9.184
+    ## Total Rows written: 300000, Total time: 13.342
+    ## Total Rows written: 400000, Total time: 17.462
+    ## Total Rows written: 412183, Total time: 17.902
+    ## Total Rows written: 100000, Total time: 4.852
+    ## Total Rows written: 200000, Total time: 8.836
+    ## Total Rows written: 300000, Total time: 13.351
+    ## Total Rows written: 400000, Total time: 17.57
+    ## Total Rows written: 412015, Total time: 18.007
+    ## Total Rows written: 100000, Total time: 4.135
+    ## Total Rows written: 200000, Total time: 9.023
+    ## Total Rows written: 300000, Total time: 13.852
+    ## Total Rows written: 400000, Total time: 18.818
+    ## Total Rows written: 410320, Total time: 19.203
+    ## Total Rows written: 100000, Total time: 4.747
+    ## Total Rows written: 200000, Total time: 9.55
+    ## Total Rows written: 300000, Total time: 14.317
+    ## Total Rows written: 400000, Total time: 19.393
+    ## Total Rows written: 410440, Total time: 19.782
+    ## Total Rows written: 100000, Total time: 4.131
+    ## Total Rows written: 200000, Total time: 8.99
+    ## Total Rows written: 300000, Total time: 13.866
+    ## Total Rows written: 400000, Total time: 18.557
+    ## Total Rows written: 414263, Total time: 19.865
+    ## Total Rows written: 100000, Total time: 6.09
+    ## Total Rows written: 200000, Total time: 11.037
+    ## Total Rows written: 300000, Total time: 15.769
+    ## Total Rows written: 400000, Total time: 20.649
+    ## Total Rows written: 413976, Total time: 21.222
+    ## Total Rows written: 100000, Total time: 5.461
+    ## Total Rows written: 200000, Total time: 10.182
+    ## Total Rows written: 300000, Total time: 14.937
+    ## Total Rows written: 400000, Total time: 20.524
+    ## Total Rows written: 413956, Total time: 21.111
+    ## Total Rows written: 100000, Total time: 5.535
     ## Total Rows written: 200000, Total time: 10.536
-    ## Total Rows written: 300000, Total time: 16.208
-    ## Total Rows written: 400000, Total time: 21.378
-    ## Total Rows written: 418648, Total time: 22.213
-    ## Total Rows written: 100000, Total time: 5.343
-    ## Total Rows written: 200000, Total time: 11.288
-    ## Total Rows written: 300000, Total time: 16.402
-    ## Total Rows written: 400000, Total time: 21.299
-    ## Total Rows written: 415550, Total time: 21.828
-    ## Total Rows written: 100000, Total time: 5.162
-    ## Total Rows written: 200000, Total time: 10.327
-    ## Total Rows written: 300000, Total time: 15.344
-    ## Total Rows written: 400000, Total time: 21.004
-    ## Total Rows written: 415475, Total time: 21.571
+    ## Total Rows written: 300000, Total time: 15.478
+    ## Total Rows written: 400000, Total time: 19.581
+    ## Total Rows written: 414679, Total time: 20.112
+    ## Total Rows written: 100000, Total time: 5.299
+    ## Total Rows written: 200000, Total time: 10.402
+    ## Total Rows written: 300000, Total time: 15.3
+    ## Total Rows written: 400000, Total time: 20.045
+    ## Total Rows written: 418308, Total time: 20.707
+    ## Total Rows written: 100000, Total time: 5.076
+    ## Total Rows written: 200000, Total time: 9.82
+    ## Total Rows written: 300000, Total time: 14.598
+    ## Total Rows written: 400000, Total time: 19.409
+    ## Total Rows written: 418648, Total time: 20.104
+    ## Total Rows written: 100000, Total time: 4.793
+    ## Total Rows written: 200000, Total time: 9.525
+    ## Total Rows written: 300000, Total time: 14.313
+    ## Total Rows written: 400000, Total time: 19.169
+    ## Total Rows written: 415550, Total time: 19.732
+    ## Total Rows written: 100000, Total time: 4.87
+    ## Total Rows written: 200000, Total time: 9.66
+    ## Total Rows written: 300000, Total time: 14.355
+    ## Total Rows written: 400000, Total time: 19.147
+    ## Total Rows written: 415475, Total time: 19.71
 
     ##    user  system elapsed 
-    ##    0.45    0.01  270.19
+    ##    0.08    0.00  251.24
 
 That's it. We can now use `nyc_sql` the same way we used `nyc_xdf` before. There is however something missing: we did not specify what the column types were. In this case, `RxSqlServerData` will try as best it can to convert a SQL Server column type to an R column type. This can cause problems though. First of all, SQL Server has a richer variety of column types than R. Second, some SQL Server column types like `datetime` for example don't always successfully transfer to their corresponding R column type. Third, the R column type `factor` does not really have a good equivalent in SQL Server, so in order for a column to be brought in as `factor` we must manually specify it. Doing so however gives us the advantage that we can also specify the levels and labels for it, and as we saw they don't always have to be the exact levels we see in the data. For example, if `payment_type` is represented by the integers 1 through 5 in the data, but we only care about 1 and 2 and want them labeled `card` and `cash` respectively, we can do that here without needing to do it later as a separate transformation. To deal with column types we create an object that stores the information about the columns and pass it to the `colInfo` argument in `RxSqlServerData`. Here's the example for `nyc_sql`:
 
@@ -238,7 +238,7 @@ When working with the XDF file in the previous weeks, we went back and forth qui
 
 ``` r
 library(maptools)
-nyc_shapefile <- readShapePoly('ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
+nyc_shapefile <- readShapePoly('../ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
 library(stringr)
 mht_shapefile <- subset(nyc_shapefile, str_detect(CITY, 'New York City-Manhattan'))
 manhattan_nhoods <- as.character(mht_shapefile@data$NAME)
@@ -301,25 +301,25 @@ rxGetInfo(nyc_sql, getVarInfo = TRUE, numRows = 3)
     ## Var 23: split, Type: character
     ## Data (3 rows starting with row 1):
     ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
-    ## 1 2016-01-01 22:16:05 2016-01-01 22:25:58               6          1.24
-    ## 2 2016-01-04 13:28:33 2016-01-04 13:40:26               1          1.70
-    ## 3 2016-01-19 15:30:57 2016-01-19 15:53:54               1          1.73
+    ## 1 2016-06-02 19:26:09 2016-06-02 19:31:25               2          1.17
+    ## 2 2016-06-23 17:22:14 2016-06-23 17:38:39               1          2.60
+    ## 3 2016-06-16 14:21:06 2016-06-16 14:27:46               1          0.50
     ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1        -73.98826        40.75594     standard         -73.99177
-    ## 2        -73.97372        40.78447     standard         -73.94872
-    ## 3        -73.97859        40.76284     standard         -73.95506
+    ## 1              -74            40.8     standard               -74
+    ## 2              -74            40.8     standard               -74
+    ## 3              -74            40.7     standard               -74
     ##   dropoff_latitude payment_type fare_amount tip_amount tolls_amount
-    ## 1         40.74926         cash         8.0       0.00            0
-    ## 2         40.77474         card         9.5       2.05            0
-    ## 3         40.76614         card        14.5       3.06            0
+    ## 1             40.8         card           6       1.00            0
+    ## 2             40.7         card          13       2.95            0
+    ## 3             40.7         cash           6       0.00            0
     ##   tip_percent pickup_hour pickup_dow dropoff_hour dropoff_dow
-    ## 1           0    6PM-10PM        Fri     6PM-10PM         Fri
-    ## 2          22    12PM-4PM        Mon     12PM-4PM         Mon
-    ## 3          21    12PM-4PM        Tue     12PM-4PM         Tue
-    ##   trip_duration        pickup_nb       dropoff_nb dropoff_cluster split
-    ## 1           593 Garment District Garment District             142 train
-    ## 2           713  Upper West Side  Upper East Side             106 train
-    ## 3          1377          Midtown  Upper East Side             260 train
+    ## 1          17    6PM-10PM        Thu     6PM-10PM         Thu
+    ## 2          23     4PM-6PM        Thu      4PM-6PM         Thu
+    ## 3           0    12PM-4PM        Thu     12PM-4PM         Thu
+    ##   trip_duration    pickup_nb        dropoff_nb dropoff_cluster split
+    ## 1           316      Midtown   Upper West Side             280  test
+    ## 2           985      Chelsea              Soho             177 train
+    ## 3           400 Little Italy Greenwich Village             293  test
 
 Let's now run `rxSummary` on a column of the data:
 
@@ -330,7 +330,7 @@ system.time(
 ```
 
     ##    user  system elapsed 
-    ##    0.01    0.00    9.63
+    ##    0.01    0.00   11.10
 
 We get our summary back, but something important is missing. We have not yet set the compute context to the remote SQL Server session. Although we got our summary back, because the compute context was set to the local R session *t**h**e**d**e**f**a**u**l**t* `rxSummary` had to download the data *u**s**i**n**g**a**n**O**D**B**C**c**o**n**n**e**c**t**i**o**n* to the local R session so that it could summarize it. **In-database analytics** however is about taking the data to the computation, not the other way around. So let's now set the compute context to the remote SQL Server session $using \`rxSetComputeContext\`$.
 
@@ -355,7 +355,7 @@ system.time(
 ```
 
     ##    user  system elapsed 
-    ##    0.31    0.05   21.69
+    ##    0.24    0.03   25.69
 
 We can set the compute context back to local anytime we need to by running `rxSetComputeContext(RxLocalSeq())`. We can also run `rxGetComputeContext()` to see what the current compute context is. The difference in run time between `rxSummary` when the compute context is set to local and when it is set to SQL depends mostly on the size of the data and the speed at which it can travel over the network to reach the local R session *w**h**e**n**t**h**e**c**o**m**p**u**t**e**c**o**n**t**e**x**t**i**s**s**e**t**t**o**l**o**c**a**l*. For large enough data sizes, this difference can be dramatic. By avoiding this cost, in-database analytics means we can greatly reduce our runtime.
 
@@ -370,7 +370,7 @@ system.time(linmod <- rxLinMod(tip_percent ~ pickup_nb:dropoff_nb + pickup_dow:p
 ```
 
     ##    user  system elapsed 
-    ##    0.75    0.03   58.01
+    ##    0.67    0.02   69.69
 
 We now point to a new SQL table called `NYCTaxiScore` $our pointer to it in R will be called \`nyc\_score\`$.
 
@@ -564,13 +564,13 @@ scoredData <- sqlQuery(conn, q)
 head(scoredData)
 ```
 
-    ##      Score
-    ## 1 11.02255
-    ## 2 12.66129
-    ## 3 13.42398
-    ## 4 16.84298
-    ## 5 15.40859
-    ## 6 13.93779
+    ##   Score
+    ## 1  16.0
+    ## 2  16.6
+    ## 3  15.5
+    ## 4  11.5
+    ## 5  16.9
+    ## 6  15.7
 
 Let's now look at how visualizations are done in a SQL Server compute context. When creating visualizations in SQL Server we need to consider first if we want to do it in-database or not and second how to store the visualization if it is done in-database. Let's consider several use cases:
 
@@ -588,7 +588,7 @@ library(gridExtra)
 grid.arrange(q1, q2, ncol = 2)
 ```
 
-![](rendered/images/chap08chunk18-1.png)
+![](../images/chap08chunk18-1.png)
 
 Visualizations that are based on the whole data instead of just a summary of the data might take too long to render (and prehaps be useless) when using very large datasets, so instead we rely on sampling to first get the data to a reasonable size. When performing exploratory data analysis (EDA), which usually involves looking at lots of visualizations, sampling can be very effective. We can sample using `rxDataStep` as we learned before.
 
@@ -601,7 +601,7 @@ ggplot(data = nyc_sample, aes(x = log(trip_distance), y = log(trip_duration))) +
   geom_point()
 ```
 
-![](rendered/images/chap08chunk19-1.png)
+![](../images/chap08chunk19-1.png)
 
 However this is not very efficient becasue we load the whole data into R before we sample it. To be more efficient, we need to sample the data in SQL and only bring the sample into R. This requires is only a little extra work:
 
@@ -612,7 +612,8 @@ nyc_sample_sql@sqlQuery <- 'select * from RDB.dbo.NYCTaxiSmall tablesample (1 pe
 nyc_sample <- rxImport(nyc_sample_sql)
 ```
 
-    ## Rows Read: 49763, Total Rows Processed: 49763, Total Chunk Time: 1.346 seconds
+    ## 
+    Rows Processed: 50355
 
 ``` r
 library(ggplot2)
@@ -620,7 +621,7 @@ ggplot(data = nyc_sample, aes(x = log(trip_distance), y = log(trip_duration))) +
   geom_point()
 ```
 
-![](rendered/images/chap08chunk20-1.png)
+![](../images/chap08chunk20-1.png)
 
 In the above scenario, we sampled the data in SQL and then used the `rxImport` function to bring the sample into R (as a `data.frame`, that is) so that we can plot or otherwise use it. Assuming that the sample is not too big, this usually runs rather quickly. However, using `rxImport` does imply that data is still traveling from the SQL VM to our host machine, so it can be plotted and observed. There is however a more clever way to run the above calculation so that no data (big or small) travel occurs and we only receive the plot object back so we can look at it. The problem is that `ggplot` is not a `RevoScaleR` function and therefore it is not compute-context-aware. This means that if we want to run it in-database, we need to explicitly send it to the SQL VM for execution. To do so we can wrap the above code in a function and pass it to the `rxExec` function for remote execution.
 
@@ -636,11 +637,12 @@ scatterPlot <- function(inDataSource) {
 scatterPlot(nyc_sample_sql) # this works, but it's not in-database
 ```
 
-    ## Rows Read: 51720, Total Rows Processed: 51720, Total Chunk Time: 1.400 seconds
+    ## 
+    Rows Processed: 49646
 
     ## $myplot
 
-![](rendered/images/chap08chunk21-1.png)
+![](../images/chap08chunk21-1.png)
 
 For this example to run `ggplot2` needs to be installed on the SQL Server R install. We can launch `Rgui.exe` as an administrator, set the `.libPaths()` to be the location where libraries should go, and then install the package. This should usually be done by an admin, not by individual users.
 
@@ -650,7 +652,7 @@ myplots <- rxExec(scatterPlot, nyc_sample_sql, timesToRun = 1, packagesToLoad = 
 plot(myplots[[1]][["myplot"]]) # only the plot object is returned to us for display
 ```
 
-![](rendered/images/chap08chunk22-1.png)
+![](../images/chap08chunk22-1.png)
 
 Once the plot object is created in-database, it is up to us to decide what to do with it. In some cases, such as the above example, we wanted to look at the plot in our R IDE. In other cases (especially in production), we are more interested in storing plot objects in-database so that they can later be retrieved by other applications and served on dashboards. We now look at an example of how to do that using SSRS. First let's create some plots and store them in the database.
 

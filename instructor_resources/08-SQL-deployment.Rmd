@@ -177,7 +177,7 @@ When working with the XDF file in the previous weeks, we went back and forth qui
 
 ```{r chap08chunk06}
 library(maptools)
-nyc_shapefile <- readShapePoly('ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
+nyc_shapefile <- readShapePoly('../ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
 library(stringr)
 mht_shapefile <- subset(nyc_shapefile, str_detect(CITY, 'New York City-Manhattan'))
 manhattan_nhoods <- as.character(mht_shapefile@data$NAME)
