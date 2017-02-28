@@ -1,0 +1,789 @@
+---
+title: "Spark Deployment"
+author: "Seth Mottaghinejad"
+output: github_document
+date: "`r Sys.Date()`"
+---
+
+```{r chap09chunk01, include=FALSE}
+source('setup.R')
+```
+
+Deployment to a Spark cluster is not to different from deployment to a SQL Server cluster, eventhough the underlying infrasturcture of a Spark cluster is very different from that of SQL Server, but fortunately almost all of that complexity is abstracted away from us. To begin with Spark is a cluster (i.e. a collection of machines, not a single one) and they all run on the Linux operating system. In our case, we use Microsoft Azure to provision an HDInsight Spark cluster. The basic steps are outlined here, but more detail can be found [in the help pages](https://docs.microsoft.com/en-us/azure/hdinsight/hdinsight-hadoop-r-server-get-started#install-r-packages). We will assume that users already have basic familiarity with how a distributed system like HDFS stores and processes data and how Spark is used to run computation on the data. At a very high level, readers should know that a Spark cluster distributes the data accross worker nodes, which don't communicate between themselves but instead communicate with a head node which acts like the brains of the operation. Since the computation happens mostly by the worker nodes, Microsoft R is installed on each worker node so jobs can run close to where the data is. We will later see how to install packages on the R worker node instances. The process of farming out the R jobs to the worker nodes is handled by the Spark cluster itself. So all we need to do is set the compute context to Spark and point to data on HDFS. 
+
+There is one last important thing to point out here: there is another instance of Microsoft R installed on what's called the **edge node**, which is a machine that is part of same network but its job is to host the R session that we will directly log into to run R jobs and collect the results for further processing. In other words, we have R installed on the worker nodes, but we do not directly interact with the worker nodes. Instead we log into the edge node and interact with the Microsoft R instance on the edge node. From this R session, we can run distributed jobs on the Spark cluster by simply pointing to data on HDFS and setting the compute context to Spark. Once we collect the results of such jobs, we can do the rest of the work locally on the edge node. Finally, to make it convenient to interact with the R session on the edge node, we installed [RStudio Server](https://www.rstudio.com/products/rstudio/download-server/) on the edge node, which allows us to log into a remote R session via the browser serving the RStudio IDE. We will also occasionally log directly into the edge node, using a remote session manager such as [MobaXterm](http://mobaxterm.mobatek.net/) or [Putty](http://www.putty.org/). For convenience, when [Azure HDInsight](https://azure.microsoft.com/en-us/services/hdinsight/) to provision the Spark cluster, most of the tasks that we perform from the remote session manager (such as installing R packages on the worker nodes using [Action Scripts](https://docs.microsoft.com/en-us/azure/hdinsight/hdinsight-hadoop-r-server-get-started#install-r-packages)) can also be performed from the [Azure Portal](https://azure.microsoft.com/en-us/features/azure-portal/), but we will do it using the remote session manager to keep things more general.
+
+To recap, we assume we have a Spark cluster that is working and configured to run Microsoft R on it. We have an edge node that has another R instance on it, along with RStudio Server. We also log into the edge node from a remote session manager such as MobaXterm. We use the same credentials to ssh into the server as we do to log into RStudio, but we occasionally change to a root user so we can install packages. In practice, this sort of task would be done by an administrator with the right priviledges.
+
+We begin by logging into RStudio Server on th edge node and logging into directly into the edge node via MobaXterm. RStudio Server is automatically installed and configured when we provision an HDInsight Spark cluster with R Server, otherwise users should go the the RStudio documentation to learn how to do this. We begin by downloading and running a sample test script to make sure that the Spark cluster is properly configured to run Microsoft R.
+
+From the command line we download the test script:
+
+```{unix}
+wget http://mrsactionscripts.blob.core.windows.net/rstudio-server-community-v01/testhdi.r
+```
+
+And we run the script from RStudio to make sure it completes without any errors. If this is not the case, users should go back and properly configure the Spark cluster and install Microsoft R. Assuming that the script ran successfully, we can now rerun the same analysis, but this time on a much bigger portion of the NYC taxi dataset. So our first job will be to get the data. The url links to the data (one for each month) are placed inside a text file called `raw_urls.txt` on the edge node. We run the following commands to download the data.
+
+```{unix}
+mkdir data
+cat raw_urls.txt | xargs -n 1 -p 6 wget -c -P data/
+```
+
+And the following commands will store the data inside HDFS.
+
+```{unix}
+hadoop fs -mkdir /user/RevoShare/sethmott/nyctaxi
+hadoop fs -copyFromLocal data/* /user/RevoShare/sethmott/nyctaxi
+hadoop fs -ls /user/RevoShare/sethmott/nyctaxi
+```
+
+On the edge node only, we also need to download the Zillow shapefile for obtaining neighborhoods from coordinates. As we will see, we do not need to do this on the worker nodes individually because once we read the shapefile into R we can pass the R object to the worker nodes.
+
+```{unix}
+wget http://www.zillow.com/static/shp/ZillowNeighborhoods-NY.zip
+unzip ZillowNeighborhoods-NY.zip -d ZillowNeighborhoods-NY/
+wget https://s3.amazonaws.com/nyc-tlc/misc/taxi_zones.zip
+unzip taxi_zones.zip -d taxi_zones/
+```
+
+Finally (and still on the edge node only), we will be downloading the R packages that we need to run the code examples. There is a dependency on Linux for installing the `rgeos` R package, which requires us to run the following command from the command line:
+
+```{unix}
+sudo apt-get install libgeos-dev -y -f
+```
+
+For package installations, instead of running `install.packages` from RStudio Server, we will run it directly from the command line by first launching R as administrator using the following command:
+
+```{unix}
+sudo R
+```
+
+Once we're in R, we should double check our library paths (using `.libPaths()`) and make sure that we place libraries where thery need to be. In a multi-user environment, it is important to place libraries in a directory that all the users can read from and avoid installing libraries in user directories. In our case, we will install all libraries in the following location:
+
+```{r}
+.libPaths("/usr/lib64/microsoft-r/3.3/lib64/R/library")
+```
+
+To get the latest versions of the libraries we can also change our default repository to CRAN prior to running `install.packages`.
+
+```{r}
+options("repos" = c(CRAN = "http://cran.r-project.org/"))
+install.packages('dplyr')
+install.packages('lubridate')
+install.packages('stringr')
+install.packages('tidyr')
+install.packages('rgeos')
+install.packages('maptools')
+install.packages('ggplot2')
+install.packages('ggrepel')
+install.packages('ggmap')
+install.packages('gridExtra')
+install.packages('seriation')
+install.packages('circlize')
+```
+
+We are almost ready to start running our code yet. There are however certain things that we need to do on each of the worker nodes in order to run our code successfully: we need to install the R packages that we use to process the data on HDFS. Note that the R packages that need to be installed on the worker nodes are just a subset of those that will be installed on the edge node, namely the subset that we need in order to process data on HDFS. For example, it is unlikely that we would need `ggplot2` on the worker nodes as we usually summarize the data on HDFS and then plot the results on the edge node, so `ggplot2` only needs to be installed on the edge node. We will point out to more examples as we run through the code.
+
+To log into a worker node, from the edge node command line we can simply run `ssh worker-name` where `worker-name` is the internal name (or IP address) of the worker node. So we now log into each worker node and do the following (on MobaXterm we can use the MultiExec button to do simultaneously): 
+
+ - 1. We install the `rgeos` dependency from the command line:
+
+```{unix}
+apt-get install libgeos-dev -y -f
+```
+
+ - 2. We run `sudo R`, double-check the library path with `.libPaths()`, set the repository to CRAN if we want the lastest versions and finally install the relevant packages. The last step requires us to know what specific packages the worker nodes need, which we don't always know ahead of time, so this process is something we repeat everytime we need a package installed on the worker nodes (recall that this is something that best done by a cluster administrator). In our case, the only packages we need to run our code successfully are the following:
+
+```{r}
+install.packages('lubridate')
+install.packages('stringr')
+install.packages('rgeos')
+install.packages('maptools')
+```
+
+We can now quit R on each worker node by running `q()`. We do NOT save the R session when we quit. And we can log out of the worker node by typing `exit` on the command line, which should bring us back to the edge node command line.
+
+At this point, we can move to RStudio and start running through the R code. We will not comment on all of the particulars of the R code, as this was alerady done in prior chapters. Instead, we will point out what is specific to working in a Spark compute context.
+
+```{r chap09chunk02}
+options(max.print = 1000, scipen = 999, width = 90, continue = " ")
+rxOptions(reportProgress = 3)
+# we still keep a small copy of the data at hand for testing purposes:
+nyc_sample_df <- read.csv("data/yellow_tripdata_2016-05.csv", nrows = 1000)
+```
+
+We saw in prior chapters that even though `RevoShare` functions work with a variety of data sources, the most efficient way to process data in `RevoScaleR` is to convert it first to XDF. The same is true in a distributed environment such as Spark, except that now the XDF data is sitting on HDFS too and it is therefore not a single XDF file but a distributed XDF file. However, this is all abstracted away from us and we still think of the data as a single entity for all intents and purposes. The conversion process is very straight-forward and analogous to what we did in a local compute context, but in Spark we first create a pointer to HDFS using the `RxHdfsFileSystem` function and we then specify that the data is in HDFS using the `fileSystem` argument to both `RxTextData` and `RxXdfData`.
+
+```{r chap09chunk03}
+myNameNode <- "default"
+myPort <- 0
+hdfsFS <- RxHdfsFileSystem(hostName = myNameNode, port = myPort)
+
+data_path <- file.path("/user/RevoShare/sethmott")
+taxi_path <- file.path(data_path, "nyctaxi")
+
+ccColInfo <- list(payment_type = list(type = "factor", levels = 1:2, newLevels = c("card", "cash", "other")))
+taxi_text <- RxTextData(taxi_path, colInfo = ccColInfo, fileSystem = hdfsFS)
+
+taxi_xdf <- RxXdfData(file.path(data_path, "nyctaxiXDF01"), fileSystem = hdfsFS)
+```
+
+Simply pointing to data on HDFS is not enough, as it specifies where the data is but not where the computation should happen. By default, computations happen in the local computate context, which in our case is the R session on the edge node. However, when we are processing data on HDFS or running an analytics algorithm on data on HDFS, we need the actual computation to happen in worker nodes of the Spark cluster and for that we need to set the compute context to Spark.
+
+```{r chap09chunk04}
+spark_cc <- RxSpark(nameNode = myNameNode,
+                    port = myPort,
+                    persistentRun = TRUE, 
+                    extraSparkConfig = "--conf spark.speculation=true")
+
+rxSetComputeContext(spark_cc)
+```
+
+Our data is already on HDFS, but in a flat file (CSV) format. So our next task is to convert the data in XDF so that we can process it faster.
+
+```{r chap09chunk05}
+system.time(
+  rxImport(inData = taxi_text, outFile = taxi_xdf)
+)
+```
+
+We now have an XDF copy of the data on HDFS in the location given by `taxi_xdf`. We can run `rxGetInfo` to check the column types and look at the first few rows of the data.
+
+```{r chap09chunk06}
+rxGetInfo(taxi_xdf, getVarInfo = TRUE, numRows = 5)
+```
+
+We are ready to run our first simple analysis: obtaining summary statistics for the `fare_amount` column. Our data `taxi_xdf` is on HDFS and our compute context is set to Spark, and that's all `rxSummary` needs to know that the computation needs to happen on the cluster.
+
+```{r chap09chunk07}
+system.time(
+  rxsum_xdf <- rxSummary( ~ fare_amount, taxi_xdf)
+)
+
+rxsum_xdf
+```
+
+There is one important distinction between working with local data (data stored on the regular file system) and working with data on HDFS: **we cannot overwrite data on HDFS**. So every time we transform the data (such as when adding new columns), we need to write out the results to a new location on HDFS.
+
+```{r chap09chunk08}
+taxi_old <- taxi_xdf
+# rxHadoopRemoveDir(taxi_xdf@file)
+taxi_xdf <- RxXdfData(file.path(data_path, "nyctaxiXDF02"), fileSystem = hdfsFS)
+```
+
+
+
+```{r chap09chunk09}
+rxDataStep(taxi_old, taxi_xdf,
+           transforms = list(tip_percent = ifelse(fare_amount > 0, 
+                                                  tip_amount/fare_amount,
+                                                  NA)))
+
+system.time(
+  rxSummary( ~ tip_percent, taxi_xdf)
+)
+```
+
+
+
+```{r chap09chunk10}
+rxCrossTabs( ~ month:year, taxi_xdf,
+             transforms = list(
+               year = as.integer(substr(tpep_pickup_datetime, 1, 4)),
+               month = as.integer(substr(tpep_pickup_datetime, 6, 7)),
+               year = factor(year, levels = 2014:2016),
+               month = factor(month, levels = 1:12)))
+```
+
+
+
+```{r chap09chunk11}
+rxCrossTabs( ~ month:year, taxi_xdf,
+             transforms = list(
+               date = ymd_hms(tpep_pickup_datetime), 
+               year = factor(year(date), levels = 2014:2016), 
+               month = factor(month(date), levels = 1:12)), 
+             transformPackages = "lubridate")
+```
+
+
+
+# part
+
+```{r chap09chunk12}
+xforms <- function(data) {
+  weekday_labels <- c('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')
+  cut_levels <- c(1, 5, 9, 12, 16, 18, 22)
+  hour_labels <- c('1AM-5AM', '5AM-9AM', '9AM-12PM', '12PM-4PM', '4PM-6PM', '6PM-10PM', '10PM-1AM')
+  
+  pickup_datetime <- lubridate::ymd_hms(data$tpep_pickup_datetime, tz = "UTC")
+  pickup_hour <- addNA(cut(hour(pickup_datetime), cut_levels))
+  pickup_dow <- factor(wday(pickup_datetime), levels = 1:7, labels = weekday_labels)
+  levels(pickup_hour) <- hour_labels
+  # 
+  dropoff_datetime <- lubridate::ymd_hms(data$tpep_dropoff_datetime, tz = "UTC")
+  dropoff_hour <- addNA(cut(hour(dropoff_datetime), cut_levels))
+  dropoff_dow <- factor(wday(dropoff_datetime), levels = 1:7, labels = weekday_labels)
+  levels(dropoff_hour) <- hour_labels
+  # 
+  data$pickup_hour <- pickup_hour
+  data$pickup_dow <- pickup_dow
+  data$dropoff_hour <- dropoff_hour
+  data$dropoff_dow <- dropoff_dow
+  data$trip_duration <- as.integer(lubridate::interval(pickup_datetime, dropoff_datetime))
+  
+  return(data)
+}
+```
+
+
+
+```{r chap09chunk13}
+x <- head(taxi_xdf)
+rxSetComputeContext("local")
+
+rxDataStep(inData = x, 
+           outFile = NULL, 
+           transformFunc = xforms, 
+           transformPackages = "lubridate")
+```
+
+
+
+```{r chap09chunk14}
+rxSetComputeContext(spark_cc)
+
+taxi_old <- taxi_xdf
+# rxHadoopRemoveDir(taxi_xdf@file)
+taxi_xdf <- RxXdfData(file.path(data_path, "nyctaxiXDF03"), fileSystem = hdfsFS)
+
+rxDataStep(inData = taxi_old, 
+           outFile = taxi_xdf, 
+           transformFunc = xforms, 
+           transformPackages = "lubridate")
+```
+
+
+
+```{r chap09chunk15}
+rxGetInfo(taxi_xdf, numRows = 5, getVarInfo = TRUE)
+```
+
+
+
+```{r chap09chunk16}
+rxs1 <- rxSummary( ~ pickup_hour + pickup_dow + trip_duration, taxi_xdf)
+# we can add a column for proportions next to the counts
+rxs1$categorical <- lapply(rxs1$categorical, 
+                           function(x) cbind(x, prop =round(prop.table(x$Counts), 2)))
+rxs1
+```
+
+
+
+```{r chap09chunk17}
+rxs2 <- rxSummary( ~ pickup_dow:pickup_hour, taxi_xdf)
+rxs2 <- tidyr::spread(rxs2$categorical[[1]], key = 'pickup_hour', value = 'Counts')
+row.names(rxs2) <- rxs2[ , 1]
+rxs2 <- as.matrix(rxs2[ , -1])
+rxs2
+```
+
+
+
+```{r chap09chunk18}
+levelplot(prop.table(rxs2, 2), cuts = 10, xlab = "", ylab = "", 
+          main = "Distribution of taxis by day of week")
+```
+
+
+
+# part
+
+```{r chap09chunk19}
+library(rgeos)
+library(sp)
+library(maptools)
+library(ggplot2)
+```
+
+
+
+```{r chap09chunk20}
+nyc_shapefile <- readShapePoly('ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
+mht_shapefile <- subset(nyc_shapefile, County == 'New York')
+
+mht_shapefile@data$id <- as.character(mht_shapefile@data$Name)
+mht.points <- fortify(gBuffer(mht_shapefile, byid = TRUE, width = 0), region = "Name")
+
+library(dplyr)
+mht.df <- inner_join(mht.points, mht_shapefile@data, by = "id")
+mht.cent <- mht.df %>%
+  group_by(id) %>%
+  summarize(long = median(long), lat = median(lat))
+
+library(ggrepel)
+ggplot(mht.df, aes(long, lat, fill = id)) + 
+  geom_polygon() +
+  geom_path(color = "white") +
+  coord_equal() +
+  theme(legend.position = "none") +
+  geom_text_repel(aes(label = id), data = mht.cent, size = 2)
+```
+
+
+
+
+```{r chap09chunk21}
+mht_shapefile@data$id <- NULL
+data_coords <- transmute(nyc_sample_df,
+                         long = ifelse(is.na(pickup_longitude), 0, pickup_longitude),
+                         lat = ifelse(is.na(pickup_latitude), 0, pickup_latitude)
+)
+# we specify the columns that correspond to the coordinates
+coordinates(data_coords) <- c('long', 'lat')
+# returns the neighborhoods based on coordinates
+nhoods <- over(data_coords, nyc_shapefile)
+# rename the column names in nhoods
+names(nhoods) <- paste('pickup', tolower(names(nhoods)), sep = '_')
+# combine the neighborhood information with the original data
+nyc_sample_df <- cbind(nyc_sample_df, nhoods[, grep('name|county', names(nhoods))])
+head(nyc_sample_df)
+```
+
+
+
+```{r chap09chunk22}
+find_nhoods <- function(data) {
+  # extract pick-up lat and long and find their neighborhoods
+  pickup_longitude <- ifelse(is.na(data$pickup_longitude), 0, data$pickup_longitude)
+  pickup_latitude <- ifelse(is.na(data$pickup_latitude), 0, data$pickup_latitude)
+  data_coords <- data.frame(long = pickup_longitude, lat = pickup_latitude)
+  coordinates(data_coords) <- c('long', 'lat')
+  nhoods <- over(data_coords, shapefile)
+  
+  ## add only the pick-up neighborhood and city columns to the data
+  data$pickup_nhood <- nhoods$Name
+  data$pickup_borough <- nhoods$County
+  
+  # extract drop-off lat and long and find their neighborhoods
+  dropoff_longitude <- ifelse(is.na(data$dropoff_longitude), 0, data$dropoff_longitude)
+  dropoff_latitude <- ifelse(is.na(data$dropoff_latitude), 0, data$dropoff_latitude)
+  data_coords <- data.frame(long = dropoff_longitude, lat = dropoff_latitude)
+  coordinates(data_coords) <- c('long', 'lat')
+  nhoods <- over(data_coords, shapefile)
+  
+  ## add only the drop-off neighborhood and city columns to the data  
+  data$dropoff_nhood <- nhoods$Name
+  data$dropoff_borough <- nhoods$County
+  
+  ## return the data with the new columns added in
+  data
+}
+```
+
+
+
+# test the function on a data.frame using rxDataStep
+
+```{r chap09chunk23}
+rxSetComputeContext("local")
+head(rxDataStep(nyc_sample_df,
+                transformFunc = find_nhoods, 
+                transformPackages = c("sp", "maptools"), 
+                transformObjects = list(shapefile = nyc_shapefile)))
+```
+
+
+
+```{r chap09chunk24}
+rxSetComputeContext(spark_cc)
+
+# then we will go ahead and deploy it across our cluster in a Spark compute context
+
+taxi_old <- taxi_xdf
+# rxHadoopRemoveDir(taxi_xdf@file)
+taxi_xdf <- RxXdfData(file.path(data_path, "nyctaxiXDF04"), fileSystem = hdfsFS)
+
+st <- Sys.time()
+rxDataStep(taxi_old, taxi_xdf, 
+           transformFunc = find_nhoods, 
+           transformPackages = c("sp", "maptools"), 
+           transformObjects = list(shapefile = nyc_shapefile))
+Sys.time() - st
+```
+
+
+
+```{r chap09chunk25}
+rxGetInfo(taxi_xdf, numRows = 5)
+```
+
+
+# part
+
+```{r chap09chunk26}
+system.time(
+  rxs_all <- rxSummary( ~ ., taxi_xdf)
+)
+rxs_all$sDataFrame
+```
+
+
+
+```{r chap09chunk27}
+nhoods_by_borough <- rxCrossTabs( ~ pickup_nhood:pickup_borough, taxi_xdf)
+nhoods_by_borough <- nhoods_by_borough$counts[[1]]
+nhoods_by_borough <- as.data.frame(nhoods_by_borough)
+
+# get the neighborhoods by borough
+lnbs <- lapply(names(nhoods_by_borough), 
+               function(vv) subset(nhoods_by_borough, 
+                                   nhoods_by_borough[ , vv] > 0, 
+                                   select = vv, drop = FALSE))
+lapply(lnbs, head)
+```
+
+
+
+```{r chap09chunk28}
+manhattan_nhoods <- subset(nyc_shapefile@data, County == 'New York', select = "Name", drop = TRUE)
+manhattan_nhoods <- as.character(manhattan_nhoods)
+bad_nhoods <- c('Brooklyn Heights', 'Marble Hill', 'Ellis Island', 'Liberty Island', 'Mill Rock Park', 'Governors Island', 'Vinegar Hill')
+manhattan_nhoods <- setdiff(manhattan_nhoods, bad_nhoods)
+```
+
+
+
+```{r chap09chunk29}
+refactor_columns <- function(dataList) {
+  dataList$pickup_nb = factor(dataList$pickup_nhood, levels = nhoods_levels)
+  dataList$dropoff_nb = factor(dataList$dropoff_nhood, levels = nhoods_levels)
+  dataList
+}
+
+taxi_old <- taxi_xdf
+# rxHadoopRemoveDir(taxi_xdf@file)
+taxi_xdf <- RxXdfData(file.path(data_path, "nyctaxiXDF05"), fileSystem = hdfsFS)
+                      
+system.time(
+  rxDataStep(taxi_old, taxi_xdf, 
+             transformFunc = refactor_columns,
+             transformObjects = list(nhoods_levels = manhattan_nhoods))
+)
+```
+
+
+
+```{r chap09chunk30}
+rxGetInfo(taxi_xdf, numRows = 5)
+```
+
+
+
+```{r chap09chunk31}
+system.time(
+  rxs_pickdrop <- rxSummary( ~ pickup_nb:dropoff_nb, taxi_xdf)
+)
+
+head(rxs_pickdrop$categorical[[1]])
+```
+
+
+# part
+
+```{r chap09chunk32}
+system.time(
+  rxHistogram( ~ trip_distance, taxi_xdf,
+               startVal = 0, endVal = 25, histType = "Percent", numBreaks = 20)
+)
+```
+
+
+
+```{r chap09chunk33}
+system.time(
+  rxs <- rxSummary( ~ pickup_nhood:dropoff_nhood, taxi_xdf, 
+                    rowSelection = (trip_distance > 15 & trip_distance < 22))
+)
+
+head(arrange(rxs$categorical[[1]], desc(Counts)), 10)
+```
+
+
+
+```{r chap09chunk34}
+system.time(
+  rxs <- rxSummary( ~ pickup_nb:dropoff_nb, taxi_xdf, 
+                    rowSelection = (trip_distance > 15 & trip_distance < 22))
+)
+
+head(arrange(rxs$categorical[[1]], desc(Counts)), 10)
+```
+
+
+# part
+
+```{r chap09chunk35}
+taxi_old <- taxi_xdf
+# rxHadoopRemoveDir(taxi_xdf@file)
+taxi_xdf <- RxXdfData(file.path(data_path, "nyctaxiXDF06"), fileSystem = hdfsFS)
+
+st <- Sys.time()
+rxDataStep(taxi_old, taxi_xdf, 
+           rowSelection = (
+             passenger_count > 0 &
+               trip_distance >= 0 & trip_distance < 30 &
+               trip_duration > 0 & trip_duration < 60*60*24 &
+               pickup_borough == 'New York' &
+               dropoff_borough == 'New York' &
+               !is.na(pickup_nb) &
+               !is.na(dropoff_nb) &
+               fare_amount > 0), 
+           varsToDrop = c('extra', 'mta_tax', 'improvement_surcharge', 'total_amount', 
+                          'pickup_borough', 'dropoff_borough', 
+                          'pickup_nhood', 'dropoff_nhood'))
+
+Sys.time() - st
+```
+
+
+# part
+
+```{r chap09chunk36}
+system.time(
+  rxct <- rxCrossTabs(trip_distance ~ pickup_nb:dropoff_nb, taxi_xdf)
+)
+
+res <- rxct$sums$trip_distance / rxct$counts$trip_distance
+
+library(seriation)
+res[which(is.nan(res))] <- mean(res, na.rm = TRUE)
+nb_order <- seriate(res)
+```
+
+
+
+```{r chap09chunk37}
+rxc1 <- rxCube(trip_distance ~ pickup_nb:dropoff_nb, taxi_xdf)
+
+rxc2 <- rxCube(minutes_per_mile ~ pickup_nb:dropoff_nb, taxi_xdf, 
+               transforms = list(minutes_per_mile = (trip_duration / 60) / trip_distance))
+
+rxc3 <- rxCube(tip_percent ~ pickup_nb:dropoff_nb, taxi_xdf,
+               rowSelection = (payment_type == 1))
+
+library(dplyr)
+res <- bind_cols(list(rxc1, rxc2, rxc3))
+res <- res[, c('pickup_nb', 'dropoff_nb', 
+               'trip_distance', 'minutes_per_mile', 'tip_percent')]
+head(res)
+```
+
+
+
+```{r chap09chunk38}
+library(ggplot2)
+ggplot(res, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = trip_distance), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  coord_fixed(ratio = .9)
+```
+
+
+
+```{r chap09chunk39}
+newlevs <- levels(res$pickup_nb)[unlist(nb_order)]
+res$pickup_nb <- factor(res$pickup_nb, levels = unique(newlevs))
+res$dropoff_nb <- factor(res$dropoff_nb, levels = unique(newlevs))
+
+library(ggplot2)
+ggplot(res, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = trip_distance), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  coord_fixed(ratio = .9)
+```
+
+
+
+```{r chap09chunk40}
+ggplot(res, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = minutes_per_mile), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  coord_fixed(ratio = .9)
+```
+
+
+
+```{r chap09chunk41}
+res %>%
+  # mutate(tip_color = cut(tip_percent, c(15, 18, 19, 21, 22, 25, 30, 100)/100)) %>%
+  mutate(tip_color = cut(tip_percent, quantile(tip_percent, na.rm = TRUE))) %>%
+  # mutate(tip_color = ntile(tip_percent, 5)) %>%
+  ggplot(aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = tip_color)) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  coord_fixed(ratio = .9)
+```
+
+
+
+# part 
+
+```{r chap09chunk42}
+taxi_old <- taxi_xdf
+# rxHadoopRemoveDir(taxi_xdf@file)
+taxi_xdf <- RxXdfData(file.path(data_path, "nyctaxiXDF07"), fileSystem = hdfsFS)
+
+system.time(
+  rxDataStep(inData = taxi_old, outFile = taxi_xdf,
+             transforms = list(pickup_nb = factor(pickup_nb, levels = newlevels),
+                               dropoff_nb = factor(dropoff_nb, levels = newlevels)),
+             transformObjects = list(newlevels = unique(newlevs)))
+)
+```
+
+
+
+```{r chap09chunk43}
+rxc <- rxCube( ~ pickup_nb:dropoff_nb, taxi_xdf)
+rxc <- as.data.frame(rxc)
+
+library(dplyr)
+rxc %>%
+  filter(Counts > 0) %>%
+  mutate(pct_all = Counts / sum(Counts) * 100) %>%
+  group_by(pickup_nb) %>%
+  mutate(pct_by_pickup_nb = Counts / sum(Counts) * 100) %>%
+  group_by(dropoff_nb) %>%
+  mutate(pct_by_dropoff_nb = Counts / sum(Counts) * 100) %>%
+  group_by() %>%
+  arrange(desc(Counts)) -> rxcs
+
+head(rxcs)
+```
+
+
+
+```{r chap09chunk44}
+ggplot(rxcs, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = pct_all), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "black") +
+  coord_fixed(ratio = .9)
+```
+
+
+
+```{r chap09chunk45}
+ggplot(rxcs, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = pct_by_pickup_nb), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  coord_fixed(ratio = .9)
+```
+
+
+
+```{r chap09chunk46}
+ggplot(rxcs, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = pct_by_dropoff_nb), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "red") +
+  coord_fixed(ratio = .9)
+```
+
+
+
+# part
+
+```{r chap09chunk47}
+taxi_old <- taxi_xdf
+# rxHadoopRemoveDir(taxi_xdf@file)
+taxi_xdf <- RxXdfData(file.path(data_path, "nyctaxiXDF08"), fileSystem = hdfsFS)
+
+system.time(
+  rxDataStep(inData = taxi_old, outFile = taxi_xdf,
+             transforms = list(
+               split = factor(ifelse(rbinom(.rxNumRows, size = 1, prob = 0.75), "train", "test")),
+               good_tip = as.factor(ifelse(tip_percent > 0.1, 1, 0))))
+)
+```
+
+
+
+```{r chap09chunk48}
+rxSummary( ~ split + good_tip, taxi_xdf)
+```
+
+
+
+```{r chap09chunk49}
+list_models <- list(rxDTree, rxDForest, rxBTrees)
+
+train_model <- function(model = rxDTree, xdf_data = taxi_xdf) {
+  form <- formula(good_tip ~ pickup_nb + dropoff_nb + pickup_hour + pickup_dow)
+  rx_model <- model(form, data = xdf_data, 
+                    rowSelection = (split == "train"),
+                    method = "class")
+  return(rx_model)  
+}
+```
+
+
+
+```{r chap09chunk50}
+system.time(
+  trained_models <- rxExec(train_model, model = rxElemArg(list_models), xdf_data = taxi_xdf)
+)
+```
+
+
+
+
+```{r chap09chunk51}
+library(dplyr)
+
+nbs_df <- rxCube(~ pickup_nb + dropoff_nb + pickup_hour, data = taxi_xdf, returnDataFrame = TRUE)
+nbs_df <- nbs_df %>% tbl_df %>%
+  filter(Counts >= 100) %>% 
+  mutate(width = ntile(Counts, 5))
+```
+
+
+
+
+```{r chap09chunk52}
+library(purrr)
+library(circlize)
+
+nbs <- c("Lower East Side", "East Village", "Chelsea", "Midtown", 
+         "Upper East Side", "Upper West Side", "Greenwich Vilalge")
+
+
+chord_diag <- . %>% select(pickup_nb, dropoff_nb, width) %>% chordDiagram()
+
+chord_plot <- nbs_df %>%
+  filter(pickup_nb %in% nbs,
+         dropoff_nb %in% nbs) %>% 
+  split(.$pickup_hour) %>%
+  map(chord_diag)
+```
+
+
+
+improvements:
+
+change sethmott to sparkuser
+rewrite the code so it's more streamlined in spark and talk about why
+try the shapefile https://s3.amazonaws.com/nyc-tlc/misc/taxi_zones.zip
+
+Common themes in the course
+ - I may have big data, but do I have a big data problem?
+ - How do take my results and say something intelligible about them?
+ - 
+
