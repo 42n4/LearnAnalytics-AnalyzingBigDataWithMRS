@@ -193,7 +193,7 @@ rxs2
 In the above case, the individual counts are not as helpful to us as proportions from those counts, and for comparing across different days of the week, we want the proportions to be based on totals for each column, not the entire table. We ask for proportions based on column totals by passing the 2 to as second argument to the `prop.table` function. We can also visually display the proportions using the `levelplot` function.
 
 ```{r chap03chunk13}
-levelplot(prop.table(rxs2, 2), cuts = 4, xlab = "", ylab = "", 
+levelplot(prop.table(rxs2, 2), cuts = 10, xlab = "", ylab = "", 
           main = "Distribution of taxis by day of week")
 ```
 
@@ -214,27 +214,22 @@ library(rgeos)
 library(maptools)
 
 nyc_shapefile <- readShapePoly('../ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
-library(stringr)
-mht_shapefile <- subset(nyc_shapefile, str_detect(CITY, 'New York City-Manhattan'))
+mht_shapefile <- subset(nyc_shapefile, City == 'New York' & County == 'New York')
 
-mht_shapefile@data$id <- as.character(mht_shapefile@data$NAME)
+mht_shapefile@data$id <- as.character(mht_shapefile@data$Name)
 library(ggplot2)
-mht.points <- fortify(gBuffer(mht_shapefile, byid = TRUE, width = 0), region = "NAME")
+mht_points <- fortify(gBuffer(mht_shapefile, byid = TRUE, width = 0), region = "Name")
 library(dplyr)
-mht.df <- inner_join(mht.points, mht_shapefile@data, by = "id")
-
-library(dplyr)
-  mht.cent <- mht.df %>%
-  group_by(id) %>%
-  summarize(long = median(long), lat = median(lat))
+mht_df <- inner_join(mht_points, mht_shapefile@data, by = "id")
+mht_cent <- cbind(mht_shapefile@data, as.data.frame(gCentroid(mht_shapefile, byid = TRUE)))
 
 library(ggrepel)
-  ggplot(mht.df, aes(long, lat, fill = id)) +
+ggplot(mht_df, aes(long, lat, fill = id)) +
   geom_polygon() +
   geom_path(color = "white") +
   coord_equal() +
   theme(legend.position = "none") +
-  geom_text_repel(aes(label = id), data = mht.cent, size = 3)
+  geom_text_repel(aes(label = id, x = x, y = y), data = mht_cent, size = 3)
 ```
 
 ### Exercises
@@ -243,7 +238,7 @@ The NYC Taxi dataset has a [data dictionary](http://www.nyc.gov/html/tlc/downloa
 
 (1) Based on the information in the data dictionary, run a transformation that coverts `rate_code_id` and `payment_type` into `factor` columns (if it's not one already) with the proper labels. In the case of `payment_type`, lump anything that isn't card or cash into a generic third category.
 
-In the last section, we stored the shapefile for Manhattan in an object called `mht_shapefile`, which we than used to plot a map of Manhattan neighborhoods. Let's now see how we can use the same shapefile along with the function `over` (part of the `sp` package) to find out pick-up and drop-off neighborhoods for each trip. We will demonstrate how we can do that with a `data.frame` (using the sample of the NYC taxi data we took earlier) and leave it as an exercise to find out how we can wrap the code in a transformation function and apply it to the XDF data.
+In the last section, we stored the shapefile for NYC in an object called `nyc_shapefile`, which we then used to plot a map of Manhattan neighborhoods. Let's now see how we can use the same shapefile along with the function `over` (part of the `sp` package) to find out pick-up and drop-off neighborhoods for each trip. We will demonstrate how we can do that with a `data.frame` (using the sample of the NYC taxi data we took earlier) and leave it as an exercise to find out how we can wrap the code in a transformation function and apply it to the XDF data.
 
 To add pick-up neighborhood columns to `nyc_sample`, we need to do as follows:
 - replace NAs in `pickup_latitude` and `pickup_longitude` with 0, otherwise we will get an error
@@ -276,7 +271,7 @@ In order to run the above transformation on the whole data, we need to take the 
 
 (3) We call the transformation function `find_nhoods`. There are hints in the code below to help you figure out the various steps needed for the function to return the expected results. Based on the above examples, fill in the code to add the pick-up and drop-off neighborhood columns to the data.
 
-```{r chap03chunk16}
+```{r chap03chunk16, eval=FALSE}
 find_nhoods <- function(data) {
   # extract pick-up lat and long and find their neighborhoods
   # add only the pick-up neighborhood and city columns to the data
@@ -288,12 +283,12 @@ find_nhoods <- function(data) {
 
 Now that we've got our function, it's time to test it. We can do so by running `rxDataStep` on the sample data `nyc_sample`. This is a good way to make sure the transformation works before we run it on the large XDF file `nyc_xdf`. Sometimes errors messages we get are more informative when we apply the transformation to a `data.frame`, and it's easier to trace it back and debug it. So here we use `rxDataStep` and feed it `nyc_sample` (with no `outFile` argument) to see what the data looks like after applying the transformation function `find_nhoods` to it.
 
-```{r chap03chunk17}
+```{r chap03chunk17, eval=FALSE}
 # test the function on a data.frame using rxDataStep
 head(rxDataStep(nyc_sample, 
                 transformFunc = find_nhoods, 
                 transformPackages = c("sp", "maptools"), 
-                transformObjects = list(shapefile = mht_shapefile)))
+                transformObjects = list(shapefile = nyc_shapefile)))
 ```
 
 (4) Did the transformation work? If not, we can go back to `find_nhoods` and keep making changes until we have the right transformation.
@@ -335,8 +330,8 @@ find_nhoods <- function(data) {
   coordinates(data_coords) <- c('long', 'lat')
   nhoods <- over(data_coords, shapefile)
   # add only the pick-up neighborhood and city columns to the data
-  data$pickup_nhood <- nhoods$NAME
-  data$pickup_borough <- nhoods$CITY
+  data$pickup_nhood <- nhoods$Name
+  data$pickup_borough <- nhoods$County
   # extract drop-off lat and long and find their neighborhoods
   dropoff_longitude <- ifelse(is.na(data$dropoff_longitude), 0, data$dropoff_longitude)
   dropoff_latitude <- ifelse(is.na(data$dropoff_latitude), 0, data$dropoff_latitude)
@@ -344,8 +339,8 @@ find_nhoods <- function(data) {
   coordinates(data_coords) <- c('long', 'lat')
   nhoods <- over(data_coords, shapefile)
   # add only the drop-off neighborhood and city columns to the data
-  data$dropoff_nhood <- nhoods$NAME
-  data$dropoff_borough <- nhoods$CITY
+  data$dropoff_nhood <- nhoods$Name
+  data$dropoff_borough <- nhoods$County
   # return the data with the new columns added in
   data
 }

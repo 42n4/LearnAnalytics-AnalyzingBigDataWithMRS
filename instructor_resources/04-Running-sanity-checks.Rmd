@@ -33,26 +33,39 @@ For example, the numeric summaries for the relevant columns in the data are stor
 head(rxs_all$sDataFrame)
 ```
 
-If we wanted one-way tables showing counts of levels for each `factor` column in the data, we can refer to `rxs_all` to obtain that, but if we need to get two-way tables showing counts of combinations of certain `factor` columns with others we need to pass the correct formula to the summary function. Here we use `rxCrossTabs` to get the number of trips from one neighborhood going into another.
+If we wanted one-way tables showing counts of levels for each `factor` column in the data, we can refer to `rxs_all` to obtain that, but if we need to get two-way tables showing counts of combinations of certain `factor` columns with others we need to pass the correct formula to the summary function. Here we use `rxCube` to get the number of trips broken up by county and neighborhoods.
 
 ```{r chap04chunk04}
+nhoods_by_borough <- rxCube( ~ pickup_nhood:pickup_borough, nyc_xdf, returnDataFrame = TRUE)
+library(dplyr)
+nhoods_by_borough %>%
+  select(pickup_borough, pickup_nhood, Counts) %>%
+  filter(Counts > 0) %>%
+  arrange(pickup_borough, desc(Counts)) %>%
+  group_by(pickup_borough) %>%
+  top_n(5)
+```
+
+The `rxCube` and `rxCrossTabs` functions return the same results, but presented differently: `rxCube` results have a tabular representation and `rxCrossTabs` results have a matrix representation. Which we prefer depends on what we are comfortable with and how we indend to use the results. For example, we might be wondering whether every neighborhood falls into one and only one county. We can answer that with the above table, but if we're comfortable with R `matrix` objects we can also use `apply` to answer this question.
+
+```{r chap04chunk05}
 nhoods_by_borough <- rxCrossTabs( ~ pickup_nhood:pickup_borough, nyc_xdf)
 nhoods_by_borough <- nhoods_by_borough$counts[[1]]
-nhoods_by_borough <- as.data.frame(nhoods_by_borough)
-
-# get the neighborhoods by borough
-lnbs <- lapply(names(nhoods_by_borough), 
-               function(vv) subset(nhoods_by_borough, nhoods_by_borough[ , vv] > 0, 
-                                   select = vv, drop = FALSE))
-lapply(lnbs, head)
+nb_cnt <- apply(nhoods_by_borough, 1, function(x) sum(x > 0))
+nb_cnt[nb_cnt > 1]
 ```
 
 ## Looking at Manhattan only
 
 Since the lion's share of taxi trips take place in Manhattan, we focus our attention to Manhattan only and ignore the other four boroughs. For that purpose, we create two new columns called `pickup_nb` and `dropoff_nb` based on the original columns `pickup_nhood` and `dropoff_nhood` except that their factor levels are limited to Manhattan neighborhoods (any other factor level will be replaced with an NA). It is important to do so, because otherwise neighborhoods outside of Manhattan will show up in any modeling or summary function involving those columns.
 
-```{r chap04chunk05}
-manhattan_nhoods <- as.character(mht_shapefile@data$NAME)
+```{r chap04chunk06}
+manhattan_nhoods <- subset(nyc_shapefile@data, County == 'New York', select = "Name", drop = TRUE)
+# manhattan_nhoods <- manhattan_nhoods[-grep('Island', manhattan_nhoods)]
+manhattan_nhoods <- as.character(manhattan_nhoods)
+bad_nhoods <- c('Brooklyn Heights', 'Marble Hill', 'Ellis Island', 'Liberty Island',
+                'Mill Rock Park', 'Governors Island', 'Vinegar Hill')
+manhattan_nhoods <- setdiff(manhattan_nhoods, bad_nhoods)
 
 refactor_columns <- function(data) {
   data$pickup_nb = factor(data$pickup_nhood, levels = nhoods_levels)
@@ -79,7 +92,7 @@ Data is messy and often needs to be cleaned before we can do much with it. Looki
 Now that we have the data with candidate outliers, we can examine it for certain patterns. For example, we can plot a histogram of `trip_distance` and notice that almost all trips traveled a distance of less than 20 miles, with the great majority going less than 5 miles.
 
 
-```{r chap04chunk06}
+```{r chap04chunk07}
 rxHistogram( ~ trip_distance, nyc_xdf, startVal = 0, endVal = 25, 
             histType = "Percent", numBreaks = 20)
 ```
@@ -87,20 +100,20 @@ rxHistogram( ~ trip_distance, nyc_xdf, startVal = 0, endVal = 25,
 There is a second peak around around trips that traveled between 16 and 20, which is worth examining further. We can verify this by looking at which neighborhoods passengers are traveling from and to.
 
 
-```{r chap04chunk07}
+```{r chap04chunk08}
 rxs <- rxSummary( ~ pickup_nhood:dropoff_nhood, nyc_xdf, 
                  rowSelection = (trip_distance > 15 & trip_distance < 22))
 library(dplyr)
 head(arrange(rxs$categorical[[1]], desc(Counts)), 10)
 ```
 
-As we can see, `Gravesend-Sheepshead Bay` often appears as a destination, and surprisingly, not as a pickup point. We can also see trips from and to `Jamaica`, which is the neighborhood closest to the JFK airport.
+Looking at the above results can help answer whether long trips correspond to airport rides or people running errands around the city and so on.
 
 ## Examining outliers
 
 Let's see how we could use `RevoScaleR` to examine the data for outliers. Our approach here is rather primitive, but the intent is to show how the use the tools: We use `rxDataStep` and its `rowSelection` argument to extract all the data points that are candidate outliers. By leaving the `outFile` argument we output the resulting dataset into a `data.frame` which we call `odd_trips`. Lastly, if we are too expansive in our outlier selection criteria, then resulting `data.frame` could still have too many rows (which could clog the memory and make it slow to produce plots and other summaries). So we create a new column `u` and populate it with random uniform numbers between 0 and 1, and we add `u < .05` to our `rowSelection` criteria. We can adjust this number to end up with a smaller `data.frame` (threshold closer to 0) or a larger `data.frame` (threshold closer to 1).
 
-```{r chap04chunk08}
+```{r chap04chunk09}
 # outFile argument missing means we output to data.frame
 odd_trips <- rxDataStep(nyc_xdf, 
   rowSelection = (u < .05 & ( # we can adjust this if the data gets too big
@@ -114,7 +127,7 @@ print(dim(odd_trips))
 
 Since the dataset with the candidate outliers is a `data.frame`, we can use any R function to examine it. For example, we limit `odd_trips` to cases where a distance of more than 20 miles was traveled, plot a histogram of the fare amount the passenger paid, and color it based on whether the trip took more or less than 10 minutes.
 
-```{r chap04chunk09}
+```{r chap04chunk10}
 library(ggplot2)
 odd_trips %>%
 filter(trip_distance > 20) %>%
@@ -131,7 +144,7 @@ As we can see, the majority of trips that traveled over 50 miles cost nothing or
 
 Let's re-create the histogram for `trip_distance` using `rxHistogram`:
 
-```{r chap04chunk10}
+```{r chap04chunk11}
 rxHistogram( ~ trip_distance, nyc_xdf, startVal = 0, endVal = 25, 
             histType = "Percent", numBreaks = 20)
 ```
@@ -142,7 +155,7 @@ We used `rxHistogram` to get a histogram of `trip_distance`, which is a `numeric
 
 For example, let's say we wanted to know if taxi trips travel zero miles (for whatever business reason), 5 miles or less, between 5 and 10 miles, or 10 or more miles. If a taxi trip travels 8.9 miles, then the following code example will answer it for us.
 
-```{r chap04chunk11}
+```{r chap04chunk12}
 cut(8.9, breaks = c(-Inf, 0, 5, 10, Inf), labels = c("0", "<5", "5-10", "10+"))
 ```
 
@@ -152,7 +165,7 @@ cut(8.9, breaks = c(-Inf, 0, 5, 10, Inf), labels = c("0", "<5", "5-10", "10+"))
 
 (1) We simply add ` | pickup_hour + payment_type` to the formula in `rxHistogram`
 
-```{r chap04chunk12}
+```{r chap04chunk13}
 rxHistogram( ~ trip_distance | pickup_hour + payment_type, nyc_xdf, startVal = 0, 
             endVal = 25, histType = "Percent", numBreaks = 20)
 ```
@@ -163,7 +176,7 @@ rxHistogram( ~ trip_distance | pickup_hour + payment_type, nyc_xdf, startVal = 0
 
 Creating too many new columns in the data based on existing columns can make the data unnecessarily large, which will cost us in terms of I/O. This is especially unnecessary when the new columns we create don't serve us much beyond looking at plot or a particular summary. In such cases, it's usually faster to chose the second option and create the column on the fly.
 
-```{r chap04chunk13}
+```{r chap04chunk14}
 rxHistogram( ~ trip_dist | pickup_hour + payment_type, nyc_xdf, 
             histType = "Percent", 
             transforms = list(trip_dist = cut(trip_distance, 
