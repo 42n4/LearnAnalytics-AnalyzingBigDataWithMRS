@@ -1,0 +1,542 @@
+---
+title: "Spark Deployment"
+author: "Seth Mottaghinejad"
+output: github_document
+date: "`r Sys.Date()`"
+---
+
+```{r chap10chunk01, include=FALSE}
+source('setup.R')
+```
+
+Deployment to a Spark cluster is not to different from deployment to a SQL Server cluster, eventhough the underlying infrasturcture of a Spark cluster is very different from that of SQL Server, but fortunately almost all of that complexity is abstracted away from us. To begin with Spark is a cluster (i.e. a collection of machines, not a single one) and they all run on the Linux operating system. In our case, we use Microsoft Azure to provision an HDInsight Spark cluster. The basic steps are outlined here, but more detail can be found [in the help pages](https://docs.microsoft.com/en-us/azure/hdinsight/hdinsight-hadoop-r-server-get-started#install-r-packages). We will assume that users already have basic familiarity with how a distributed system like HDFS stores and processes data and how Spark is used to run computation on the data. At a very high level, readers should know that a Spark cluster distributes the data accross worker nodes, which don't communicate between themselves but instead communicate with a head node which acts like the brains of the operation. Since the computation happens mostly by the worker nodes, Microsoft R is installed on each worker node so jobs can run close to where the data is. We will later see how to install packages on the R worker node instances. The process of farming out the R jobs to the worker nodes is handled by the Spark cluster itself. So all we need to do is set the compute context to Spark and point to data on HDFS.
+
+There is one last important thing to point out here: there is another instance of Microsoft R installed on what's called the **edge node**, which is a machine that is part of same network but its job is to host the R session that we will directly log into to run R jobs and collect the results for further processing. In other words, we have R installed on the worker nodes, but we do not directly interact with the worker nodes. Instead we log into the edge node and interact with the Microsoft R instance on the edge node. From this R session, we can run distributed jobs on the Spark cluster by simply pointing to data on HDFS and setting the compute context to Spark. Once we collect the results of such jobs, we can do the rest of the work locally on the edge node. Finally, to make it convenient to interact with the R session on the edge node, we installed [RStudio Server](https://www.rstudio.com/products/rstudio/download-server/) on the edge node, which allows us to log into a remote R session via the browser serving the RStudio IDE. We will also occasionally log directly into the edge node, using a remote session manager such as [MobaXterm](http://mobaxterm.mobatek.net/) or [Putty](http://www.putty.org/). For convenience, when [Azure HDInsight](https://azure.microsoft.com/en-us/services/hdinsight/) to provision the Spark cluster, most of the tasks that we perform from the remote session manager (such as installing R packages on the worker nodes using [Action Scripts](https://docs.microsoft.com/en-us/azure/hdinsight/hdinsight-hadoop-r-server-get-started#install-r-packages)) can also be performed from the [Azure Portal](https://azure.microsoft.com/en-us/features/azure-portal/), but we will do it using the remote session manager to keep things more general.
+
+To recap, we assume we have a Spark cluster that is working and configured to run Microsoft R on it. We have an edge node that has another R instance on it, along with RStudio Server. We also log into the edge node from a remote session manager such as MobaXterm. We use the same credentials to ssh into the server as we do to log into RStudio, but we occasionally change to a root user so we can install packages. In practice, this sort of task would be done by an administrator with the right priviledges.
+
+We begin by logging into RStudio Server on th edge node and logging into directly into the edge node via MobaXterm. RStudio Server is automatically installed and configured when we provision an HDInsight Spark cluster with R Server, otherwise users should go the the RStudio documentation to learn how to do this. We begin by downloading and running a sample test script to make sure that the Spark cluster is properly configured to run Microsoft R.
+
+From the command line we download the test script:
+
+```{bash, eval=FALSE}
+wget http://mrsactionscripts.blob.core.windows.net/rstudio-server-community-v01/testhdi.r
+```
+
+And we run the script from RStudio to make sure it completes without any errors. If this is not the case, users should go back and properly configure the Spark cluster and install Microsoft R. Assuming that the script ran successfully, we can now rerun the same analysis, but this time on a much bigger portion of the NYC taxi dataset. So our first job will be to get the data. The url links to the original data (one link per month) are placed inside a text file called `raw_urls.txt` on the edge node. We run the following commands to download the data.
+
+```{bash, eval=FALSE}
+mkdir data
+cat raw_urls.txt | xargs -n 1 -p 6 wget -c -P data/
+```
+
+And the following commands will store the data inside HDFS.
+
+```{bash, eval=FALSE}
+hadoop fs -mkdir /user/RevoShare/sethmott/nyctaxi
+hadoop fs -copyFromLocal data/* /user/RevoShare/sethmott/nyctaxi
+hadoop fs -ls /user/RevoShare/sethmott/nyctaxi
+```
+
+On the edge node only, we also need to download the Zillow shapefile for obtaining neighborhoods from coordinates. As we will see, we do not need to do this on the worker nodes individually because once we read the shapefile into R we can pass the R object to the worker nodes.
+
+```{bash, eval=FALSE}
+wget http://www.zillow.com/static/shp/ZillowNeighborhoods-NY.zip
+unzip ZillowNeighborhoods-NY.zip -d ZillowNeighborhoods-NY/
+```
+
+Finally (and still on the edge node only), we will be downloading the R packages that we need to run the code examples. There is a dependency on Linux for installing the `rgeos` R package, which requires us to run the following command from the command line:
+
+```{bash, eval=FALSE}
+sudo apt-get install libgeos-dev -y -f
+```
+
+For package installations, instead of running `install.packages` from RStudio Server, we will run it directly from the command line by first launching R as administrator using the following command:
+
+```{bash, eval=FALSE}
+sudo R
+```
+
+Once we're in R, we should double check our library paths (using `.libPaths()`) and make sure that we place libraries where thery need to be. In a multi-user environment, it is important to place libraries in a directory that all the users can read from and avoid installing libraries in user directories. In our case, we will install all libraries in the following location:
+
+```{r chap10chunk02, eval=FALSE}
+.libPaths("/usr/lib64/microsoft-r/3.3/lib64/R/library")
+```
+
+To get the latest versions of the libraries we can also change our default repository to CRAN prior to running `install.packages`.
+
+```{r chap10chunk03, eval=FALSE}
+options("repos" = c(CRAN = "http://cran.r-project.org/"))
+install.packages('dplyr')
+install.packages('lubridate')
+install.packages('stringr')
+install.packages('tidyr')
+install.packages('rgeos')
+install.packages('maptools')
+install.packages('ggplot2')
+install.packages('ggrepel')
+install.packages('ggmap')
+install.packages('gridExtra')
+install.packages('seriation')
+install.packages('circlize')
+```
+
+We are almost ready to start running our code yet. There are however certain things that we need to do on each of the worker nodes in order to run our code successfully: we need to install the R packages that we use to process the data on HDFS. Note that the R packages that need to be installed on the worker nodes are just a subset of those that will be installed on the edge node, namely the subset that we need in order to process data on HDFS. For example, it is unlikely that we would need `ggplot2` on the worker nodes as we usually summarize the data on HDFS and then plot the results on the edge node, so `ggplot2` only needs to be installed on the edge node. We will point out to more examples as we run through the code.
+
+To log into a worker node, from the edge node command line we can simply run `ssh worker-name` where `worker-name` is the internal name (or IP address) of the worker node. So we now log into each worker node and do the following (on MobaXterm we can use the MultiExec button to do simultaneously): 
+
+ - 1. We install the `rgeos` dependency from the command line:
+
+```{bash, eval=FALSE}
+apt-get install libgeos-dev -y -f
+```
+
+ - 2. We run `sudo R`, double-check the library path with `.libPaths()`, set the repository to CRAN if we want the lastest versions and finally install the relevant packages. The last step requires us to know what specific packages the worker nodes need, which we don't always know ahead of time, so this process is something we repeat everytime we need a package installed on the worker nodes (recall that this is something that best done by a cluster administrator). In our case, the only packages we need to run our code successfully are the following:
+
+```{r chap10chunk04, eval=FALSE}
+install.packages('lubridate')
+install.packages('stringr')
+install.packages('rgeos')
+install.packages('maptools')
+```
+
+We can now quit R on each worker node by running `q()`. We don't need to (and shouldn't) save the R session when we quit. And we can log out of the worker node by typing `exit` on the command line, which should bring us back to the edge node command line.
+
+At this point, we can move to RStudio and start running through the R code. We will not comment on all of the particulars of the R code, as this was alerady done in prior chapters. Instead, we will point out what is specific to working in a Spark compute context.
+
+We saw in prior chapters that even though `RevoScaleR` functions work with a variety of data sources, the most efficient way to process data in `RevoScaleR` is to convert it first to XDF. The same is true in a distributed environment such as Spark, except that now the XDF data is sitting on HDFS too and it is therefore not a single XDF file but a distributed XDF file. However, this is all abstracted away from us and we still think of the data as a single entity for all intents and purposes. The conversion process is very straight-forward and analogous to what we did in a local compute context, but in Spark we first create a pointer to HDFS using the `RxHdfsFileSystem` function and we then specify that the data is in HDFS using the `fileSystem` argument to both `RxTextData` and `RxXdfData`.
+
+```{r chap10chunk05}
+myNameNode <- "default"
+myPort <- 0
+hdfsFS <- RxHdfsFileSystem(hostName = myNameNode, port = myPort)
+
+data_path <- file.path("/user/RevoShare/sparkuser")
+taxi_path <- file.path(data_path, "nyctaxi")
+
+payment_levels <- c("card", "cash", "no charge", "dispute", "unknown", "voided trip")
+ccColInfo <- list(payment_type = list(type = "factor", 
+                                      levels = as.character(1:6),
+                                      newLevels = payment_levels))
+
+taxi_text <- RxTextData(taxi_path, colInfo = ccColInfo, fileSystem = hdfsFS)
+rxGetInfo(taxi_text, getVarInfo = TRUE, numRows = 10)
+```
+
+Simply pointing to data on HDFS is not enough, as it specifies where the data is but not where the computation should happen. By default, computations happen in the local computate context, which in our case is the R session on the edge node. However, when we are processing data on HDFS or running an analytics algorithm on data on HDFS, we need the actual computation to happen in worker nodes of the Spark cluster and for that we need to set the compute context to Spark.
+
+```{r chap10chunk06}
+spark_cc <- RxSpark(nameNode = myNameNode,
+                    port = myPort,
+                    persistentRun = TRUE, 
+                    executorOverheadMem = "4G", 
+                    executorMem = "16G", 
+                    executorCores = 4,
+                    extraSparkConfig = "--conf spark.speculation=true",
+                    consoleOutput = TRUE)
+
+rxSetComputeContext(spark_cc)
+```
+
+We can also run a simple analysis: obtaining summary statistics for the `fare_amount` and `payment_type` columns. Our data `taxi_text` is on HDFS and our compute context is set to Spark, and that's all `rxSummary` needs to know that the computation needs to happen on the cluster. Note that the column type for `fare_amount` was deduced from the data, but the `payment_type` was explicitly stated to be a `factor` column (using the `colInfo` argument to `RxTextData`).
+
+```{r chap10chunk07}
+system.time(
+  rxsum <- rxSummary( ~ fare_amount + payment_type, taxi_text)
+)
+
+rxsum
+```
+
+There is one important distinction between working with local data (data stored on the regular file system) and working with data on HDFS: **we cannot overwrite data on HDFS**. So every time we transform the data (such as when adding new columns), we need to write out the results to a new location on HDFS. If a file already exists in the location that we are trying to write out to, then we must first delete it using `rxHadoopRemoveDir` (or using the command line). To keep things simple as far as keeping track of the new locations, everytime we are running `rxDataStep` to do a data transformation and we need to write to a new location, we will call the location we're are reading from `taxi_old` and the location we are writing to `taxi_new`. As run as we run our code in a linear fashion (from top to bottom), this won't cause any problems. If however we needed to go back and run a previous chunk, we would need to make sure that `taxi_old` and `taxi_new` are pointing to the right locations for that chunk. Our naming convention is just so `taxi_new` always points to the latest iteration of the data, but users may prefer to name each iteration distinctly (such as `nyc_taxi_1`, `nyc_taxi_2`, etc.) if they want to avoid the above problem posed by the naming convention.
+
+```{r chap10chunk08}
+taxi_old <- taxi_text
+taxi_new <- RxXdfData(file.path(data_path, "nyctaxiXDF01"), fileSystem = hdfsFS)
+rxHadoopRemoveDir(taxi_new@file)
+```
+
+Here's an example of what we just described: We are running `rxDataStep` in the next code chunk in order to calculate `tip_percent`. We have the option of doing this on-the-fly as we learned in previous chapters, but let's say we insist on persisting this transformation (meaning we want to write it out to the data). Since we cannot overwrite the original data on HDFS, in the adove code chunk we let `taxi_old` point the current data and `taxi_new` point to the new data (which includes the `tip_percent` column). 
+
+Note that `taxi_old` points to the original flat file data, whereas `taxi_new` is pointing to an XDF file, so while we are running a transformation on the data, we are also converting the data from flat files to the more efficient XDF format. If the location that `taxi_new` points to is not new, we can simply run the `rxHadoopRemoveDir` line from the above chunk to delete it before we run `rxDataStep`.
+
+```{r chap10chunk09}
+rxDataStep(taxi_old, taxi_new,
+           transforms = list(tip_percent = ifelse(fare_amount > 0, 
+                                                  tip_amount/fare_amount,
+                                                  NA)))
+```
+
+We can now run a summary on the newly created column.
+
+```{r chap10chunk10}
+system.time(
+  rxs1 <- rxSummary( ~ tip_percent, taxi_new)
+)
+```
+
+There are two things to keep in mind here: 
+
+ - 1. We should take advantage of on-the-fly transformations as much as possible when that's the right thing to do so that we can get faster results.
+ - 2. If everytime we do a transformation we need to write it out to a new location, then we should combine our transformations when possible (we can simply place them inside the same transformation function) to avoid too many instances of the data. We can also manually remove prior instances if they're no longer needed. This brings out an important point: although for the most part our code is the same going from a local compute context to a remote one, when it comes to running common data-processing tasks (prior to running data summaries or modeling), we would benefit from taking a second pass and streamlining the data-processing steps as much as possible.
+
+First let's take a look at an example of on-the-fly transformations. This is the same transformation as before, but running inside of `rxSummary` itself.
+
+```{r chap10chunk11}
+system.time(
+  rxs2 <- rxSummary( ~ tip_percent, taxi_old,
+                    transforms = list(tip_percent = ifelse(fare_amount > 0, 
+                                                           tip_amount/fare_amount,
+                                                           NA)))
+)
+```
+
+Now let's see how we can combine all the transformations we performed on the data in order to prepare it for analysis. We will repeate the last transformation, but this time combine it with all the other transformations we did to get the data ready for analysis. The first set of transformations we add involve creating columns `pickup_hour`, `pickup_dow`, `dropoff_hour`, `dropoff_dow`, and `trip_duration`. The second set of transformations use the Zillow neighborhoods shapefile to extract `pickup_nhood` and `dropoff_nhood`. Because the shapefile included neighborhoods outside of Manhattan (our area of interest), we also preform transformations that removed these unwanted neighborhoods from the levels of these `factor` columns. The details of the transformations are not discussed here as they were already discussed in Chapter 3. We will combine all of the above transformations into one transformation, thereby reducing some of the IO innefficiency of doing them piece by piece. As we can see, the resulting transformation function is a rather long one, but it not complex becuase it is just a combination of multiple transformations which we already developed and tested before.
+
+```{r chap10chunk12}
+xforms <- function(data) {
+
+  data$tip_percent <- ifelse(data$fare_amount > 0, data$tip_amount/data$fare_amount, NA)
+
+  weekday_labels <- c('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')
+  cut_levels <- c(1, 5, 9, 12, 16, 18, 22)
+  hour_labels <- c('1AM-5AM', '5AM-9AM', '9AM-12PM', '12PM-4PM', '4PM-6PM', '6PM-10PM', '10PM-1AM')
+
+  # extract pick-up hour and day of week
+  pickup_datetime <- lubridate::ymd_hms(data$tpep_pickup_datetime, tz = "UTC")
+  pickup_hour <- addNA(cut(hour(pickup_datetime), cut_levels))
+  pickup_dow <- factor(wday(pickup_datetime), levels = 1:7, labels = weekday_labels)
+  levels(pickup_hour) <- hour_labels
+  # extract drop-off hour and day of week
+  dropoff_datetime <- lubridate::ymd_hms(data$tpep_dropoff_datetime, tz = "UTC")
+  dropoff_hour <- addNA(cut(hour(dropoff_datetime), cut_levels))
+  dropoff_dow <- factor(wday(dropoff_datetime), levels = 1:7, labels = weekday_labels)
+  levels(dropoff_hour) <- hour_labels
+  data$pickup_hour <- pickup_hour
+  data$pickup_dow <- pickup_dow
+  data$dropoff_hour <- dropoff_hour
+  data$dropoff_dow <- dropoff_dow
+  # extract trip duration
+  data$trip_duration <- as.integer(lubridate::interval(pickup_datetime, dropoff_datetime))
+  
+  # extract pick-up lat and long and find their neighborhoods
+  pickup_longitude <- ifelse(is.na(data$pickup_longitude), 0, data$pickup_longitude)
+  pickup_latitude <- ifelse(is.na(data$pickup_latitude), 0, data$pickup_latitude)
+  data_coords <- data.frame(long = pickup_longitude, lat = pickup_latitude)
+  coordinates(data_coords) <- c('long', 'lat')
+  nhoods <- over(data_coords, shapefile)
+  # add only the pick-up neighborhood and borough columns to the data
+  data$pickup_nhood <- nhoods$Name
+  data$pickup_borough <- nhoods$County
+
+  # extract drop-off lat and long and find their neighborhoods
+  dropoff_longitude <- ifelse(is.na(data$dropoff_longitude), 0, data$dropoff_longitude)
+  dropoff_latitude <- ifelse(is.na(data$dropoff_latitude), 0, data$dropoff_latitude)
+  data_coords <- data.frame(long = dropoff_longitude, lat = dropoff_latitude)
+  coordinates(data_coords) <- c('long', 'lat')
+  nhoods <- over(data_coords, shapefile)
+  # add only the drop-off neighborhood and borough columns to the data
+  data$dropoff_nhood <- nhoods$Name
+  data$dropoff_borough <- nhoods$County
+
+  # reduce pick-up and drop-off neighborhoods to manhattan only
+  data$pickup_nb = factor(data$pickup_nhood, levels = nhoods_levels)
+  data$dropoff_nb = factor(data$dropoff_nhood, levels = nhoods_levels)
+
+  return(data)
+}
+```
+
+It is time to run the above transformation function. We first make sure that any R objects that the function depends on is loaded so that we can pass it to the transformation function when we run `rxDataStep`.
+
+```{r chap10chunk13}
+library(rgeos)
+library(maptools)
+
+nyc_shapefile <- readShapePoly('ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
+mht_shapefile <- subset(nyc_shapefile, City == 'New York' & County == 'New York')
+
+manhattan_nhoods <- subset(nyc_shapefile@data, County == 'New York', select = "Name", drop = TRUE)
+manhattan_nhoods <- as.character(manhattan_nhoods)
+bad_nhoods <- c('Brooklyn Heights', 'Marble Hill', 'Mill Rock Park','Vinegar Hill')
+bad_nhoods <- c(bad_nhoods, grep('Island', manhattan_nhoods, value = TRUE))
+manhattan_nhoods <- setdiff(manhattan_nhoods, bad_nhoods)
+```
+
+Next we test the transformation to make sure everything works before we deploy it to data on HDFS. We are confident that things should work because we've already tested the code when we worked in locally on the XDF file, but it is still a good idea to run these tests as a sanity check. If errors happen we would catch them faster by running tests like this than if we sifted through Spark error messages.
+
+```{r chap10chunk14}
+x <- head(taxi_new)
+rxSetComputeContext("local")
+
+rxDataStep(inData = x, 
+           outFile = NULL, 
+           transformFunc = xforms, 
+           transformPackages = c("lubridate", "sp", "maptools"),
+           transformObjects = list(nhoods_levels = manhattan_nhoods,
+                                   shapefile = nyc_shapefile))
+```
+
+Everything seems to be fine, and we are ready to deply the transformation to the data on HDFS. Earlier, we ran a basic transformation to create the `tip_percent` column. That transformation is also included in the above transformation function, so we will remove the resulting data (using `rxHadoopRemoveDir`) from that transformation and replace it with the new one which will include all the additional columns as well.
+
+```{r chap10chunk15}
+rxSetComputeContext(spark_cc)
+
+taxi_old <- taxi_text
+taxi_new <- RxXdfData(file.path(data_path, "nyctaxiXDF01"), fileSystem = hdfsFS)
+rxHadoopRemoveDir(taxi_new@file)
+
+system.time(
+  rxDataStep(inData = taxi_old, 
+             outFile = taxi_new, 
+             transformFunc = xforms, 
+             transformPackages = c("lubridate", "sp", "maptools"),
+             transformObjects = list(nhoods_levels = manhattan_nhoods,
+                                     shapefile = nyc_shapefile))
+)
+```
+
+Let's check the data to make sure everything worked.
+
+```{r chap10chunk16}
+rxGetInfo(taxi_new, numRows = 5, getVarInfo = TRUE)
+```
+
+Let's run some of the same summaries we ran on the much smaller subset of the data. For the sake of not sounding repetitive, we only repeat a subset of the summaries, vizualizations and modeling tasks we covered in previous chapters. If anything in particular stands out in Spark, we will draw attention to it. As we do this, we also ask the reader to ask how much the conclusions we draw from the results based on the big data differ from the ones drawn from the much smaller data we used in the earlier chapters.
+
+```{r chap10chunk17}
+rxs1 <- rxSummary( ~ pickup_hour + pickup_dow + trip_duration, taxi_new)
+# we can add a column for proportions next to the counts
+rxs1$categorical <- lapply(rxs1$categorical, 
+                           function(x) cbind(x, prop =round(prop.table(x$Counts), 2)))
+rxs1
+```
+
+The above proportions are not very different from the proportions based on the smaller sample. This makes sense since the smaller sample was a representative sample of the larger data.
+
+```{r chap10chunk18}
+rxs2 <- rxSummary( ~ pickup_dow:pickup_hour, taxi_new)
+rxs2 <- tidyr::spread(rxs2$categorical[[1]], key = 'pickup_hour', value = 'Counts')
+row.names(rxs2) <- rxs2[ , 1]
+rxs2 <- as.matrix(rxs2[ , -1])
+rxs2
+```
+
+Let's recreate the level plot and see if any trends in particular stand out.
+
+```{r chap10chunk19}
+levelplot(prop.table(rxs2, 2), cuts = 10, xlab = "", ylab = "", 
+          main = "Distribution of taxis by day of week")
+```
+
+When large amounts of data are at hand, Spark can really scale well and shine. This is because the data is spread out over several worker node allowing us to process more data concurrently. As a basic example, if we have a small Spark cluster with two worker nodes, we could have twice the amount of data as before and still run our summaries and analytics algorithms within about the same time (ignoring the small overhead of launching a Spark job).
+
+```{r chap10chunk20}
+system.time(
+  rxs_all <- rxSummary( ~ ., taxi_new)
+)
+rxs_all$sDataFrame
+```
+
+We can find the top 10 neighborhoods by county using `rxCube`.
+
+```{r chap10chunk21}
+nhoods_by_borough <- rxCube( ~ pickup_nhood:pickup_borough, taxi_new, returnDataFrame = TRUE)
+library(dplyr)
+nhoods_by_borough %>%
+  select(pickup_borough, pickup_nhood, Counts) %>%
+  filter(Counts > 0) %>%
+  arrange(pickup_borough, desc(Counts)) %>%
+  group_by(pickup_borough) %>%
+  top_n(10) %>%
+  print(n = 50)
+```
+
+Here's a histogram of trip distance, showing as before that most trips are rather short trips and that there is a second peak for longer trips between 15 and 22 miles.
+
+
+```{r chap10chunk22}
+system.time(
+  rxHistogram( ~ trip_distance, taxi_new,
+               startVal = 0, endVal = 25, histType = "Percent", numBreaks = 20)
+)
+```
+
+For longer trips, we can look at what neighborhoods are traveled from and to in order to find out what accounts for the longer trips. Since the columns `pickup_nhood` and `dropoff_nhood` include all New York City neighborhoods, we can look at counts of combinations of these two columns to see find patterns in the long trips.
+
+```{r chap10chunk23}
+system.time(
+  rxs <- rxSummary( ~ pickup_nhood:dropoff_nhood, taxi_new, 
+                    rowSelection = (trip_distance > 15 & trip_distance < 22))
+)
+
+rxs <- rxs$categorical[[1]]
+head(arrange(rxs, desc(Counts)), 10)
+```
+
+The columns `pickup_nb` and `dropoff_nb` are similar to `pickup_nhood` and `dropoff_nhood` but only contain the neighborhoods in Manhattan (everything else is NA), so looking at counts within combinations of these two columns can help us find patterns in long trips that begin and end in Manhattan.
+
+```{r chap10chunk24}
+system.time(
+  rxs <- rxSummary( ~ pickup_nb:dropoff_nb, taxi_new, 
+                    rowSelection = (trip_distance > 15 & trip_distance < 22))
+)
+
+rxs <- rxs$categorical[[1]]
+head(arrange(rxs, desc(Counts)), 10)
+```
+
+In previous chapters, we used the distance matrix and the `seriate` function in order to find an arrangement for the neighborhoods in Manhattan that places closer neighborhoods next to each other. Often when doing exploratory analysis we rely on such tools to make it easier for us to keep moving on with the analysis without being bogged down by details or having to type too much code. In a Spark environment, especially in prediction, we tend to be more conservative. While we can still use `seriate`, it's likely that by now we have a better understanding of the data so we can just provide a suitable arrangement and avoid processes that have somewhat random outcomes. So here we simply provide a suitable arrangement of Manhattan neighborhoods, which we will later use to rearrange the `factor` columns `pickup_nb` and `dropoff_nb`.
+
+```{r chap10chunk25}
+newlevs <- c("Financial District", "Battery Park", "Tribeca", "Chinatown",
+             "Lower East Side", "Little Italy", "SoHo", "West Village", 
+             "Greenwich Village", "NoHo", "Stuyvesant Town", "East Village", 
+             "Gramercy", "Flatiron District", "Chelsea", "Clinton", 
+             "Garment District", "Murray Hill", "Tudor City", "Turtle Bay", 
+             "Sutton Place", "Midtown", "Columbus Circle", "Upper East Side", 
+             "Central Park", "Carnegie Hill", "Upper West Side", "East Harlem", 
+             "Harlem", "Morningside Heights", "Manhattanville", 
+             "Hamilton Heights", "Washington Heights", "Inwood")
+```
+
+Our next task is to take the data that is only relevant to Manhattan and throw out any unreasonable values that might skew our models one way or another for no legitimate reason. In the same step, we will modify the `pickup_nb` and `dropoff_nb` columns so that their levels are sorted in the order that is provided by `newlevs` in the last chunk. We pass the new order to the transformation through the `transformObjects` argument. Finally, becuase we will be running models in a later step, we create a column called split that we can later use to randomly split the data into training and testing sets, and we create a binary column called `good_tip` based on whether `tip_percent` is greater than 30 percent or not. Notice that once again, what was a set of separate steps in the local compute context was combined into a single step in Spark.
+
+```{r chap10chunk26}
+taxi_old <- RxXdfData(file.path(data_path, "nyctaxiXDF01"), fileSystem = hdfsFS)
+taxi_new <- RxXdfData(file.path(data_path, "nyctaxiXDF02"), fileSystem = hdfsFS)
+rxHadoopRemoveDir(taxi_new@file)
+
+st <- Sys.time()
+rxDataStep(taxi_old, taxi_new,
+           transforms = list(pickup_nb = factor(pickup_nb, levels = newlevels),
+                             dropoff_nb = factor(dropoff_nb, levels = newlevels),
+                             split = factor(ifelse(rbinom(.rxNumRows, size = 1, prob = 0.75), "train", "test")),
+                             good_tip = as.factor(ifelse(tip_percent > 0.3, 1, 0))),
+           transformObjects = list(newlevels = unique(newlevs)),
+           rowSelection = (
+             passenger_count > 0 & 
+             payment_type %in% c("card", "cash") & 
+             trip_distance >= 0 & trip_distance < 30 & 
+             trip_duration > 0 & trip_duration < 60*60*24 & 
+             !is.na(pickup_nb) & 
+             !is.na(dropoff_nb) & 
+             fare_amount > 0), 
+           varsToDrop = c('extra', 'mta_tax', 'improvement_surcharge', 'total_amount', 
+                          'pickup_borough', 'dropoff_borough', 
+                          'pickup_nhood', 'dropoff_nhood'))
+
+Sys.time() - st
+```
+
+We can now recreate the remaining plots we looked before when we only had a sample of the data and see if any particular trends stand out when we create the plots on the whole data instead.
+
+```{r chap10chunk27}
+rxc1 <- rxCube(trip_distance ~ pickup_nb:dropoff_nb, taxi_new)
+
+rxc2 <- rxCube(minutes_per_mile ~ pickup_nb:dropoff_nb, taxi_new, 
+               transforms = list(minutes_per_mile = (trip_duration / 60) / trip_distance))
+
+rxc3 <- rxCube(tip_percent ~ pickup_nb:dropoff_nb, taxi_new,
+               rowSelection = (payment_type == "card"))
+
+library(dplyr)
+res <- bind_cols(list(rxc1, rxc2, rxc3))
+res <- res[, c('pickup_nb', 'dropoff_nb', 
+               'trip_distance', 'minutes_per_mile', 'tip_percent')]
+head(res)
+```
+
+We begin with a tile plot showing the average trip distance between any two neighborhoods.
+
+```{r chap10chunk28}
+library(ggplot2)
+ggplot(res, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = trip_distance), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  coord_fixed(ratio = .9)
+```
+
+Next, for trips between any two neighborhoods, we look at the average number of minutes for every mile of the trip which should roughly tell us how much traffic there for trips between those neighborhoods.
+
+```{r chap10chunk29}
+ggplot(res, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = minutes_per_mile), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  coord_fixed(ratio = .9)
+```
+
+Now we look at the average percentage that passengers tipped for trips between any two neighborhoods. Since tip is not recorded for cash customers, the results shown here are for card customers only.
+
+```{r chap10chunk30}
+ggplot(res, aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = tip_percent), colour = "white") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  coord_fixed(ratio = .9)
+```
+
+There are multiple approaches to summarizing this sort of information. We could for example color code `tip_percent` based on cut-offs that we choose (less than 15, between 15 and 20, between 20 and 25, and 25 percent or more).
+
+```{r chap10chunk31}
+res %>%
+  mutate(tip_color = cut(tip_percent, c(15, 20, 25, 100)/100)) %>%
+  ggplot(aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = tip_color)) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  coord_fixed(ratio = .9)
+```
+
+The above approach forces us to choose absolute cut-offs, but we can also choose to color-code the data based on relative cut-offs (bottom 25% of tippers, the next 25%, the next 25%, and the top 25% of tippers).
+
+```{r chap10chunk32}
+res %>%
+  mutate(tip_color = cut(tip_percent, quantile(tip_percent, na.rm = TRUE))) %>%
+  # mutate(tip_color = ntile(tip_percent, 5)) %>%
+  ggplot(aes(pickup_nb, dropoff_nb)) +
+  geom_tile(aes(fill = tip_color)) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  coord_fixed(ratio = .9)
+```
+
+It is time we moved to some modeling exercises. The modeling examples in the previous chapters were aimed at predicting a value for `tip_percent`. This is called regression. We have a new categorical column in the data called `good_tip` which we want to be able to predict. Predicting a category is usually easier than predicting an actual number.
+
+```{r chap10chunk33}
+rxSummary( ~ split + good_tip, taxi_new)
+```
+
+The three models we will explore are decision trees (`rxDTree`), random forests (`rxDForest`) which are simply a collection of independent trees whose predictions are aggregated to give us a final prediction, and boosted trees (`rxBTrees`), which like the random forest is a collection of trees, but unlike random forest the trees are not independently built. Instead boosting is an iterative algorithm that at each iteration tries to build a model that is better at making predictions for cases we've so far not been able to predict well.
+
+```{r chap10chunk34}
+list_models <- list(dtree = rxDTree, dforest = rxDForest, btrees = rxBTrees)
+
+train_model <- function(model = rxDTree, xdf_data = taxi_new) {
+  form <- formula(good_tip ~ payment_type + pickup_nb + dropoff_nb + pickup_hour + pickup_dow)
+  rx_model <- model(form, data = xdf_data, 
+                    rowSelection = (split == "train"),
+                    method = "class")
+  return(rx_model)  
+}
+```
+
+We can run all three models simultaneously by passing them to `rxExec`. Since the compute context is set to Spark, the execution will happen over the cluster. It's important to point out the distinction between the sorts of pararellisms that are being used here. HDFS gives us data pararellism, and Spark gives us the mechanism to take advantage of it. The `RevoScaleR` function are all compute-context aware, and since the compute context is set to Spark, they will execute on top of the Spark infrasturcture and take advantage of all the pararellism of Spark. On top of that, through `rxExec`, we can run the three models in pararel.
+
+```{r chap10chunk35}
+system.time(
+  trained_models <- rxExec(train_model, model = rxElemArg(list_models), xdf_data = taxi_new)
+)
+```
+
+The topic of evaluating models and how to improve our models was already discussed in the modeling chapter, so here we will simply pick one of the models to show how we can score a new dataset on HDFS with it. The process mirrors almost exactly what we would do in the local compute context, except that we point to data in Spark to do the scoring. In this case the scoring is happening in batch.
+
+```{r chap10chunk36}
+taxi_score <- RxTextData(file.path(data_path, "nyctaxiXDF03"), fileSystem = hdfsFS)
+rxHadoopRemoveDir(taxi_score@file)
+
+rxPredict(trained_models$btree, data = taxi_new, outData = taxi_score,
+          predVarNames = "good_tip_pred", 
+          extraVarsToWrite = c("pickup_datetime", "dropoff_datetime"))
+```
+

@@ -148,8 +148,8 @@ pred_df <- expand.grid(ll)
 
 ```{r chap07chunk12, eval=FALSE}
 ggplot(data = pred_all) +
-  geom_bar(aes(x = p1, fill = "model 1", group = payment_type, alpha = .5)) +
-  geom_bar(aes(x = p3, fill = "model 3", group = payment_type, alpha = .5)) +
+  geom_bar(aes(x = p1, fill = "model 1", group = payment_type), alpha = .5) +
+  geom_bar(aes(x = p3, fill = "model 3", group = payment_type), alpha = .5) +
   facet_grid(pickup_hour ~ pickup_dow) +
   xlab('tip percent prediction') +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -187,8 +187,8 @@ pred_df %>%
 
 ```{r chap07chunk15}
 ggplot(data = pred_all) +
-  geom_bar(aes(x = p1, fill = "model 1", alpha = .5)) +
-  geom_bar(aes(x = p3, fill = "model 3", alpha = .5)) +
+  geom_bar(aes(x = p1, fill = "model 1"), alpha = .5) +
+  geom_bar(aes(x = p3, fill = "model 3"), alpha = .5) +
   facet_grid(~ payment_type) +
   xlab('tip percent prediction') +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
