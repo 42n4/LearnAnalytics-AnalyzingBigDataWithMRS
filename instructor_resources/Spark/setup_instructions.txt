@@ -1,0 +1,86 @@
+
+# step 1: from the portal provision a Spark cluster and fill in the info below
+cluster_name    : "********"
+admin_login     : "admin"
+admin_pwd       : "********"
+ssh_login       : "sparkuser"
+ssh_pwd         : "********"
+resource_group  : "********"
+region          : "********"
+storage_account : "********"
+edge_node       : "********"
+RStudio         : "********"
+Ambari          : "********"
+head_node       : "********"
+worker_node     : ["********"]
+
+# step 2: pin R Server to dashboard
+
+# step 3: log in with admin credentials and then use sparkuser credentials to log into RStudio
+
+# step 4: download the test script and run it in RStudio
+wget http://mrsactionscripts.blob.core.windows.net/rstudio-server-community-v01/testhdi.r
+
+# step 5: at the end of the test script, note the worker node names and paste them above
+
+# step 6: from the edge node run the following:
+mkdir data
+cat raw_urls.txt | xargs -n 1 wget -c -P data/
+
+# step 7: while it's happening, go to RStudio and run the test script
+hadoop fs -mkdir /user/RevoShare/sparkuser
+hadoop fs -mkdir /user/RevoShare/sparkuser/nyctaxi
+hadoop fs -copyFromLocal data/* /user/RevoShare/sparkuser/nyctaxi
+hadoop fs -ls /user/RevoShare/sparkuser/nyctaxi
+
+# step 8: download other dependencies
+wget http://www.zillow.com/static/shp/ZillowNeighborhoods-NY.zip
+unzip ZillowNeighborhoods-NY.zip -d ZillowNeighborhoods-NY/
+sudo apt-get install libgeos-dev -y -f
+
+# step 9: install R packages on the edge node
+sudo R
+.libPaths("/usr/lib64/microsoft-r/3.3/lib64/R/library")
+options("repos" = c(CRAN = "http://cran.r-project.org/"))
+install.packages('dplyr')
+install.packages('lubridate')
+install.packages('stringr')
+install.packages('tidyr')
+install.packages('rgeos')
+install.packages('maptools')
+install.packages('ggplot2')
+install.packages('ggrepel')
+install.packages('ggmap')
+install.packages('gridExtra')
+q() # quit and say no to saving the workspace
+
+# step 10 (optional): # packages needed by RMarkdown
+sudo R
+install.packages('evaluate')
+install.packages('formatR')
+install.packages('highr')
+install.packages('markdown')
+install.packages('yaml')
+install.packages('htmltools')
+install.packages('caTools')
+install.packages('knitr')
+install.packages('rmarkdown')
+install.packages('rmarkdown')
+q() # quit and say no to saving the workspace
+
+# step 11: log into worker nodes as sparkuser with ssh password and run multi-execution
+sudo apt-get install libgeos-dev -y -f
+
+# step 12: install R packages on the worker nodes
+sudo R
+.libPaths()
+options("repos" = c(CRAN = "http://cran.r-project.org/"))
+install.packages('lubridate')
+install.packages('stringr')
+install.packages('rgeos')
+install.packages('maptools')
+library(lubridate)
+library(stringr)
+library(rgeos)
+library(maptools)
+q() # quit and say no to saving the workspace

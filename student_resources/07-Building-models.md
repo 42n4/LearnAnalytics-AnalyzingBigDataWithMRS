@@ -1,7 +1,7 @@
 Building models
 ================
 Seth Mottaghinejad
-2017-02-17
+2017-02-28
 
 Trying to modeling a given behavior can be a very involved task, as the data itself and business requirements have a say into our choice for a model. Some models have higher predictive power but are less easy to interpret, and others are the other way around. Moreover, the process of building a model can also involves several stages such as choosing among many models then iterating so we can tune the model we've decided upon.
 
@@ -74,16 +74,16 @@ head(pred_df_1, 10)
 ```
 
     ##    tip_pred_1 tip_stderr_1          pickup_nb dropoff_nb pickup_dow
-    ## 1        7.59        0.772          Chinatown  Chinatown        Sun
-    ## 2       11.65        0.411            Tribeca  Chinatown        Sun
-    ## 3       14.80        0.736       Little Italy  Chinatown        Sun
-    ## 4       10.84        0.280 Financial District  Chinatown        Sun
-    ## 5       12.08        0.324    Lower East Side  Chinatown        Sun
-    ## 6       12.68        0.442               Soho  Chinatown        Sun
-    ## 7       11.40        0.563       Battery Park  Chinatown        Sun
-    ## 8       13.04        0.313  Greenwich Village  Chinatown        Sun
-    ## 9       13.97        0.297       East Village  Chinatown        Sun
-    ## 10      12.65        0.505       West Village  Chinatown        Sun
+    ## 1    7.585604    0.7724980          Chinatown  Chinatown        Sun
+    ## 2   11.652358    0.4108979            Tribeca  Chinatown        Sun
+    ## 3   14.799271    0.7357894       Little Italy  Chinatown        Sun
+    ## 4   10.838549    0.2804085 Financial District  Chinatown        Sun
+    ## 5   12.078835    0.3243162    Lower East Side  Chinatown        Sun
+    ## 6   12.681298    0.4418141               Soho  Chinatown        Sun
+    ## 7   11.396901    0.5630987       Battery Park  Chinatown        Sun
+    ## 8   13.041078    0.3134503  Greenwich Village  Chinatown        Sun
+    ## 9   13.974115    0.2971224       East Village  Chinatown        Sun
+    ## 10  12.652115    0.5050404       West Village  Chinatown        Sun
     ##    pickup_hour
     ## 1      1AM-5AM
     ## 2      1AM-5AM
@@ -167,12 +167,12 @@ head(pred_df)
 ```
 
     ##   pickup_dow pickup_hour pickup_nb dropoff_nb tip_pred_2 tip_pred_1
-    ## 1        Sun     1AM-5AM Chinatown  Chinatown       7.58       7.59
-    ## 2        Sun     5AM-9AM Chinatown  Chinatown       7.58       6.48
-    ## 3        Sun    9AM-12PM Chinatown  Chinatown       7.58       6.72
-    ## 4        Sun    12PM-4PM Chinatown  Chinatown       7.58       6.47
-    ## 5        Sun     4PM-6PM Chinatown  Chinatown       7.58       6.74
-    ## 6        Sun    6PM-10PM Chinatown  Chinatown       7.58       7.49
+    ## 1        Sun     1AM-5AM Chinatown  Chinatown   7.581197   7.585604
+    ## 2        Sun     5AM-9AM Chinatown  Chinatown   7.581197   6.479020
+    ## 3        Sun    9AM-12PM Chinatown  Chinatown   7.581197   6.719867
+    ## 4        Sun    12PM-4PM Chinatown  Chinatown   7.581197   6.474056
+    ## 5        Sun     4PM-6PM Chinatown  Chinatown   7.581197   6.738151
+    ## 6        Sun    6PM-10PM Chinatown  Chinatown   7.581197   7.488318
 
 We can see from the results above that the predictions with the simpler model are identical across all the days of the week and all the hours for the same pick-up and drop-off combination. Whereas the predictions by the more complex model are unique for every combination of all four variables. In other words, adding `pickup_dow:pickup_hour` to the model adds extra variation to the predictions, and what we'd like to know is if this variation contains important signals or if it more or less behaves like noise. To get to the answer, we compare the distribution of the two predictions when we break them up by `pickup_dow` and `pickup_hour`.
 
@@ -413,64 +413,64 @@ mht_split <- rx_split_xdf(xdf = mht_xdf,
     Rows Processed: 4554338
     Rows Processed: 4969813 
     ## 
-    Rows Processed: 103323 
+    Rows Processed: 102807 
     ## 
-    Rows Processed: 308860 
+    Rows Processed: 309376 
     ## 
     Rows Processed: 412183
-    Rows Processed: 102659 
+    Rows Processed: 102886 
     ## 
-    Rows Processed: 309356 
+    Rows Processed: 309129 
     ## 
     Rows Processed: 824198
-    Rows Processed: 102180 
+    Rows Processed: 101970 
     ## 
-    Rows Processed: 308140 
+    Rows Processed: 308350 
     ## 
     Rows Processed: 1234518
-    Rows Processed: 102723 
+    Rows Processed: 102280 
     ## 
-    Rows Processed: 307717 
+    Rows Processed: 308160 
     ## 
     Rows Processed: 1644958
-    Rows Processed: 103504 
+    Rows Processed: 103863 
     ## 
-    Rows Processed: 310759 
+    Rows Processed: 310400 
     ## 
     Rows Processed: 2059221
-    Rows Processed: 103045 
+    Rows Processed: 103329 
     ## 
-    Rows Processed: 310931 
+    Rows Processed: 310647 
     ## 
     Rows Processed: 2473197
-    Rows Processed: 103566 
+    Rows Processed: 103562 
     ## 
-    Rows Processed: 310390 
+    Rows Processed: 310394 
     ## 
     Rows Processed: 2887153
-    Rows Processed: 103759 
+    Rows Processed: 103437 
     ## 
-    Rows Processed: 310920 
+    Rows Processed: 311242 
     ## 
     Rows Processed: 3301832
-    Rows Processed: 104675 
+    Rows Processed: 104536 
     ## 
-    Rows Processed: 313633 
+    Rows Processed: 313772 
     ## 
     Rows Processed: 3720140
-    Rows Processed: 104527 
+    Rows Processed: 104628 
     ## 
-    Rows Processed: 314121 
+    Rows Processed: 314020 
     ## 
     Rows Processed: 4138788
-    Rows Processed: 104175 
+    Rows Processed: 103973 
     ## 
-    Rows Processed: 311375 
+    Rows Processed: 311577 
     ## 
     Rows Processed: 4554338
-    Rows Processed: 104037 
+    Rows Processed: 103600 
     ## 
-    Rows Processed: 311438 
+    Rows Processed: 311875 
     ## 
     Rows Processed: 4969813
 
@@ -489,21 +489,21 @@ system.time(linmod <- rxLinMod(tip_percent ~ pickup_nb:dropoff_nb + pickup_dow:p
 ```
 
     ##    user  system elapsed 
-    ##    0.02    0.00    0.47
+    ##    0.03    0.00    0.64
 
 ``` r
 system.time(dtree <- rxDTree(tip_percent ~ pickup_nb + dropoff_nb + pickup_dow + pickup_hour, data = mht_split$train, pruneCp = "auto", reportProgress = 0))
 ```
 
     ##    user  system elapsed 
-    ##    0.04    0.00   84.47
+    ##    0.05    0.02  139.86
 
 ``` r
 system.time(dforest <- rxDForest(tip_percent ~ pickup_nb + dropoff_nb + pickup_dow + pickup_hour, data = mht_split$train, nTree = 30, importance = TRUE, useSparseCube = TRUE, reportProgress = 0))
 ```
 
     ##    user  system elapsed 
-    ##    0.11    0.00  238.55
+    ##    0.13    0.05  382.47
 
 Since running the above algorithms can take a while, it may be worth saving the models that each return.
 
@@ -588,54 +588,54 @@ rxPredict(trained.models$linmod, data = mht_split$test, outData = mht_split$test
 ```
 
     ## 
-    Rows Processed: 308860
-    Rows Processed: 618216
-    Rows Processed: 926356
-    Rows Processed: 1234073
-    Rows Processed: 1544832
-    Rows Processed: 1855763
-    Rows Processed: 2166153
-    Rows Processed: 2477073
-    Rows Processed: 2790706
-    Rows Processed: 3104827
-    Rows Processed: 3416202
-    Rows Processed: 3727640
+    Rows Processed: 309376
+    Rows Processed: 618505
+    Rows Processed: 926855
+    Rows Processed: 1235015
+    Rows Processed: 1545415
+    Rows Processed: 1856062
+    Rows Processed: 2166456
+    Rows Processed: 2477698
+    Rows Processed: 2791470
+    Rows Processed: 3105490
+    Rows Processed: 3417067
+    Rows Processed: 3728942
 
 ``` r
 rxPredict(trained.models$dtree, data = mht_split$test, outData = mht_split$test, predVarNames = "tip_percent_pred_dtree", overwrite = TRUE)
 ```
 
     ## 
-    Rows Processed: 308860
-    Rows Processed: 618216
-    Rows Processed: 926356
-    Rows Processed: 1234073
-    Rows Processed: 1544832
-    Rows Processed: 1855763
-    Rows Processed: 2166153
-    Rows Processed: 2477073
-    Rows Processed: 2790706
-    Rows Processed: 3104827
-    Rows Processed: 3416202
-    Rows Processed: 3727640
+    Rows Processed: 309376
+    Rows Processed: 618505
+    Rows Processed: 926855
+    Rows Processed: 1235015
+    Rows Processed: 1545415
+    Rows Processed: 1856062
+    Rows Processed: 2166456
+    Rows Processed: 2477698
+    Rows Processed: 2791470
+    Rows Processed: 3105490
+    Rows Processed: 3417067
+    Rows Processed: 3728942
 
 ``` r
 rxPredict(trained.models$dforest, data = mht_split$test, outData = mht_split$test, predVarNames = "tip_percent_pred_dforest", overwrite = TRUE)
 ```
 
     ## 
-    Rows Processed: 308860
-    Rows Processed: 618216
-    Rows Processed: 926356
-    Rows Processed: 1234073
-    Rows Processed: 1544832
-    Rows Processed: 1855763
-    Rows Processed: 2166153
-    Rows Processed: 2477073
-    Rows Processed: 2790706
-    Rows Processed: 3104827
-    Rows Processed: 3416202
-    Rows Processed: 3727640
+    Rows Processed: 309376
+    Rows Processed: 618505
+    Rows Processed: 926855
+    Rows Processed: 1235015
+    Rows Processed: 1545415
+    Rows Processed: 1856062
+    Rows Processed: 2166456
+    Rows Processed: 2477698
+    Rows Processed: 2791470
+    Rows Processed: 3105490
+    Rows Processed: 3417067
+    Rows Processed: 3728942
 
 ``` r
 rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test,
@@ -646,18 +646,18 @@ rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test,
 ```
 
     ## 
-    Rows Processed: 308860
-    Rows Processed: 618216
-    Rows Processed: 926356
-    Rows Processed: 1234073
-    Rows Processed: 1544832
-    Rows Processed: 1855763
-    Rows Processed: 2166153
-    Rows Processed: 2477073
-    Rows Processed: 2790706
-    Rows Processed: 3104827
-    Rows Processed: 3416202
-    Rows Processed: 3727640
+    Rows Processed: 309376
+    Rows Processed: 618505
+    Rows Processed: 926855
+    Rows Processed: 1235015
+    Rows Processed: 1545415
+    Rows Processed: 1856062
+    Rows Processed: 2166456
+    Rows Processed: 2477698
+    Rows Processed: 2791470
+    Rows Processed: 3105490
+    Rows Processed: 3417067
+    Rows Processed: 3728942
 
     ## Call:
     ## rxSummary(formula = ~SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test, 
@@ -669,12 +669,16 @@ rxSummary(~ SSE_linmod + SSE_dtree + SSE_dforest, data = mht_split$test,
     ##     SSE_dforest
     ## Data: mht_split$test (RxXdfData Data Source)
     ## File name: C:\Data\NYC_taxi\output\train.split.train.xdf
-    ## Number of valid observations: 3727640 
+    ## Number of valid observations: 3728942 
     ##  
-    ##  Name        Mean StdDev Min            Max  ValidObs MissingObs
-    ##  SSE_linmod  139  177    0.000000001277 7943 3724737  2903      
-    ##  SSE_dtree   139  178    0.000000053808 7983 3724737  2903      
-    ##  SSE_dforest 139  176    0.000000000558 7761 3724737  2903
+    ##  Name        Mean     StdDev   Min                                 
+    ##  SSE_linmod  139.1868 175.6740 0.0000000000000000000000000001546167
+    ##  SSE_dtree   139.1643 176.1312 0.0000038748261381108108575635484705
+    ##  SSE_dforest 138.8462 174.8122 0.0000000000102172309775806611706339
+    ##  Max      ValidObs MissingObs
+    ##  8015.448 3726019  2923      
+    ##  8020.056 3726019  2923      
+    ##  7906.674 3726019  2923
 
 Another metric worth looking at is a correlation matrix. This can help us determine to what extent the predictions from the different models are close to each other, and to what extent each is close to the actual or observed tip percent.
 
@@ -683,33 +687,33 @@ rxc <- rxCor( ~ tip_percent + tip_percent_pred_linmod + tip_percent_pred_dtree +
 ```
 
     ## 
-    Rows Processed: 308860
-    Rows Processed: 618216
-    Rows Processed: 926356
-    Rows Processed: 1234073
-    Rows Processed: 1544832
-    Rows Processed: 1855763
-    Rows Processed: 2166153
-    Rows Processed: 2477073
-    Rows Processed: 2790706
-    Rows Processed: 3104827
-    Rows Processed: 3416202
-    Rows Processed: 3727640
+    Rows Processed: 309376
+    Rows Processed: 618505
+    Rows Processed: 926855
+    Rows Processed: 1235015
+    Rows Processed: 1545415
+    Rows Processed: 1856062
+    Rows Processed: 2166456
+    Rows Processed: 2477698
+    Rows Processed: 2791470
+    Rows Processed: 3105490
+    Rows Processed: 3417067
+    Rows Processed: 3728942
 
 ``` r
 print(rxc)
 ```
 
     ##                          tip_percent tip_percent_pred_linmod
-    ## tip_percent                    1.000                   0.136
-    ## tip_percent_pred_linmod        0.136                   1.000
-    ## tip_percent_pred_dtree         0.138                   0.842
-    ## tip_percent_pred_dforest       0.147                   0.900
+    ## tip_percent                1.0000000               0.1359495
+    ## tip_percent_pred_linmod    0.1359495               1.0000000
+    ## tip_percent_pred_dtree     0.1364810               0.8447106
+    ## tip_percent_pred_dforest   0.1472673               0.9106463
     ##                          tip_percent_pred_dtree tip_percent_pred_dforest
-    ## tip_percent                               0.138                    0.147
-    ## tip_percent_pred_linmod                   0.842                    0.900
-    ## tip_percent_pred_dtree                    1.000                    0.923
-    ## tip_percent_pred_dforest                  0.923                    1.000
+    ## tip_percent                           0.1364810                0.1472673
+    ## tip_percent_pred_linmod               0.8447106                0.9106463
+    ## tip_percent_pred_dtree                1.0000000                0.9283602
+    ## tip_percent_pred_dforest              0.9283602                1.0000000
 
 ### Exercises
 
@@ -828,13 +832,13 @@ head(pred_df)
     ## 4         cash      Tribeca  Chinatown     1AM-5AM        Sun
     ## 5         card Little Italy  Chinatown     1AM-5AM        Sun
     ## 6         cash Little Italy  Chinatown     1AM-5AM        Sun
-    ##   pred_linmod_1 pred_linmod_2 pred_dtree
-    ## 1          8.79       21.2691  21.056393
-    ## 2          8.79       -0.0916   0.000328
-    ## 3         11.25       21.5448  21.056393
-    ## 4         11.25        0.1841   0.000328
-    ## 5         14.70       23.0329  21.056393
-    ## 6         14.70        1.6722   0.000328
+    ##   pred_linmod_1 pred_linmod_2   pred_dtree
+    ## 1      9.928182    22.3983754 21.705727828
+    ## 2      9.928182     1.0381083  0.000164329
+    ## 3     12.236094    21.6252174 21.705727828
+    ## 4     12.236094     0.2649504  0.000164329
+    ## 5     16.828946    24.9087283 21.705727828
+    ## 6     16.828946     3.5484613  0.000164329
 
 1.  We now feed the above data to `ggplot` to look at the distribution of the predictions made by each model. It should come as no surprise that with the inclusion of `payment_type` the predictions have a **bimodal distribution** one for trips paid in cash and one for trips paid using a card. For trips paid in cash, the actual distribution is not as important, but for trips paid using a card we can see that the random forest model makes predictions that are less spread out than the other two models.
 
@@ -857,39 +861,39 @@ test_df <- rxDataStep(mht_split$test, varsToKeep = c('tip_percent', 'payment_typ
 ```
 
     ## 
-    Rows Processed: 308860
-    Rows Processed: 618216
-    Rows Processed: 926356
-    Rows Processed: 1234073
-    Rows Processed: 1544832
-    Rows Processed: 1855763
-    Rows Processed: 2166153
-    Rows Processed: 2477073
-    Rows Processed: 2790706
-    Rows Processed: 3104827
-    Rows Processed: 3416202
-    Rows Processed: 3727640
+    Rows Processed: 309376
+    Rows Processed: 618505
+    Rows Processed: 926855
+    Rows Processed: 1235015
+    Rows Processed: 1545415
+    Rows Processed: 1856062
+    Rows Processed: 2166456
+    Rows Processed: 2477698
+    Rows Processed: 2791470
+    Rows Processed: 3105490
+    Rows Processed: 3417067
+    Rows Processed: 3728942
 
 ``` r
 test_df_1 <- rxPredict(trained.models$linmod_1, data = test_df, predVarNames = "tip_pred_linmod_1")
 ```
 
     ## 
-    Rows Processed: 3727640
+    Rows Processed: 3728942
 
 ``` r
 test_df_2 <- rxPredict(trained.models$linmod_2, data = test_df, predVarNames = "tip_pred_linmod_2")
 ```
 
     ## 
-    Rows Processed: 3727640
+    Rows Processed: 3728942
 
 ``` r
 test_df_3 <- rxPredict(trained.models$dtree, data = test_df, predVarNames = "tip_pred_dtree")
 ```
 
     ## 
-    Rows Processed: 3727640
+    Rows Processed: 3728942
 
 ``` r
 test_df <- do.call(cbind, list(test_df, test_df_1, test_df_2, test_df_3))
@@ -904,12 +908,12 @@ head(test_df)
     ## 5           0         cash         Gramercy     West Village    12PM-4PM
     ## 6          34         card Garment District          Midtown     1AM-5AM
     ##   pickup_dow tip_pred_linmod_1 tip_pred_linmod_2 tip_pred_dtree
-    ## 1        Tue              17.7            23.552      22.886240
-    ## 2        Wed              13.2            -1.419       0.000328
-    ## 3        Sun              13.7            20.937      22.051412
-    ## 4        Fri              15.0            19.884      18.888734
-    ## 5        Tue              14.8            -0.656       0.000328
-    ## 6        Fri              11.4            22.421      22.138634
+    ## 1        Tue          17.64869        23.4318701   23.198918420
+    ## 2        Wed          13.67083        -1.3331889    0.000164329
+    ## 3        Sun          13.91380        20.9889078   22.038624113
+    ## 4        Fri          14.00318        19.6826817   18.710000264
+    ## 5        Tue          14.99703        -0.5735811    0.000164329
+    ## 6        Fri          11.63258        22.4662642   22.071999870
 
 Since we have the test data in a `data.frame` we can also plot the distribution of the predictions on the test data to compare it with the last plot. As we can see, the random forest and linear model both probably waste some computation effort making predictions for trips paid in cash.
 
@@ -934,7 +938,7 @@ rxSummary(~ SSE_linmod_1 + SSE_linmod_2 + SSE_dtree, data = test_df,
 ```
 
     ## 
-    Rows Processed: 3727640
+    Rows Processed: 3728942
 
     ## Call:
     ## rxSummary(formula = ~SSE_linmod_1 + SSE_linmod_2 + SSE_dtree, 
@@ -945,34 +949,38 @@ rxSummary(~ SSE_linmod_1 + SSE_linmod_2 + SSE_dtree, data = test_df,
     ## Summary Statistics Results for: ~SSE_linmod_1 + SSE_linmod_2 +
     ##     SSE_dtree
     ## Data: test_df
-    ## Number of valid observations: 3727640 
+    ## Number of valid observations: 3728942 
     ##  
-    ##  Name         Mean  StdDev Min           Max  ValidObs MissingObs
-    ##  SSE_linmod_1 139.3 177    0.00000000128 7943 3724737   2903     
-    ##  SSE_linmod_2  40.2 136    0.00000000161 6149 3710167  17473     
-    ##  SSE_dtree     41.8 140    0.00000010756 6427 3724737   2903
+    ##  Name         Mean      StdDev   Min                                 
+    ##  SSE_linmod_1 139.18676 175.6740 0.0000000000000000000000000001546167
+    ##  SSE_linmod_2  40.07856 135.1130 0.0000000000000000000000000000000000
+    ##  SSE_dtree     41.80960 138.4497 0.0000000270040222138820546729683081
+    ##  Max      ValidObs MissingObs
+    ##  8015.448 3726019   2923     
+    ##  6215.947 3711362  17580     
+    ##  6535.421 3726019   2923
 
 ``` r
 rxc <- rxCor( ~ tip_percent + tip_pred_linmod_1 + tip_pred_linmod_2 + tip_pred_dtree, data = test_df)
 ```
 
     ## 
-    Rows Processed: 3727640
+    Rows Processed: 3728942
 
 ``` r
 print(rxc)
 ```
 
     ##                   tip_percent tip_pred_linmod_1 tip_pred_linmod_2
-    ## tip_percent             1.000             0.136             0.846
-    ## tip_pred_linmod_1       0.136             1.000             0.161
-    ## tip_pred_linmod_2       0.846             0.161             1.000
-    ## tip_pred_dtree          0.846             0.154             0.995
+    ## tip_percent         1.0000000         0.1355376         0.8467185
+    ## tip_pred_linmod_1   0.1355376         1.0000000         0.1622829
+    ## tip_pred_linmod_2   0.8467185         0.1622829         1.0000000
+    ## tip_pred_dtree      0.8463435         0.1555113         0.9945409
     ##                   tip_pred_dtree
-    ## tip_percent                0.846
-    ## tip_pred_linmod_1          0.154
-    ## tip_pred_linmod_2          0.995
-    ## tip_pred_dtree             1.000
+    ## tip_percent            0.8463435
+    ## tip_pred_linmod_1      0.1555113
+    ## tip_pred_linmod_2      0.9945409
+    ## tip_pred_dtree         1.0000000
 
 The average SSE has now dropped to a little over 20, which confirms how the inclusion of the right features (`payment_type` in this case) can have a significant impact on our model's predictive power.
 
