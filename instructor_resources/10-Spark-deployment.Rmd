@@ -129,6 +129,9 @@ Simply pointing to data on HDFS is not enough, as it specifies where the data is
 spark_cc <- RxSpark(nameNode = myNameNode,
                     port = myPort,
                     persistentRun = TRUE, 
+                    executorOverheadMem = "4G", 
+                    executorMem = "16G", 
+                    executorCores = 4,
                     extraSparkConfig = "--conf spark.speculation=true",
                     consoleOutput = TRUE)
 
@@ -397,7 +400,7 @@ newlevs <- c("Financial District", "Battery Park", "Tribeca", "Chinatown",
              "Hamilton Heights", "Washington Heights", "Inwood")
 ```
 
-Our next task is to take the data that is only relevant to Manhattan and throw out any unreasonable values that might skew our models one way or another for no legitimate reason. In the same step, we will modify the `pickup_nb` and `dropoff_nb` columns so that their levels are sorted in the order that is provided by `newlevs` in the last chunk. We pass the new order to the transformation through the `transformObjects` argument. Finally, becuase we will be running models in a later step, we create a column called split that we can later use to randomly split the data into training and testing sets, and we create a binary column called `good_tip` based on whether `tip_percent` is greater than 20 percent or not. Notice that once again, what was a set of separate steps in the local compute context was combined into a single step in Spark.
+Our next task is to take the data that is only relevant to Manhattan and throw out any unreasonable values that might skew our models one way or another for no legitimate reason. In the same step, we will modify the `pickup_nb` and `dropoff_nb` columns so that their levels are sorted in the order that is provided by `newlevs` in the last chunk. We pass the new order to the transformation through the `transformObjects` argument. Finally, becuase we will be running models in a later step, we create a column called split that we can later use to randomly split the data into training and testing sets, and we create a binary column called `good_tip` based on whether `tip_percent` is greater than 30 percent or not. Notice that once again, what was a set of separate steps in the local compute context was combined into a single step in Spark.
 
 ```{r chap10chunk26}
 taxi_old <- RxXdfData(file.path(data_path, "nyctaxiXDF01"), fileSystem = hdfsFS)
@@ -409,17 +412,15 @@ rxDataStep(taxi_old, taxi_new,
            transforms = list(pickup_nb = factor(pickup_nb, levels = newlevels),
                              dropoff_nb = factor(dropoff_nb, levels = newlevels),
                              split = factor(ifelse(rbinom(.rxNumRows, size = 1, prob = 0.75), "train", "test")),
-                             good_tip = as.factor(ifelse(tip_percent > 0.2, 1, 0))),
+                             good_tip = as.factor(ifelse(tip_percent > 0.3, 1, 0))),
            transformObjects = list(newlevels = unique(newlevs)),
            rowSelection = (
-             passenger_count > 0 &
+             passenger_count > 0 & 
              payment_type %in% c("card", "cash") & 
-             trip_distance >= 0 & trip_distance < 30 &
-             trip_duration > 0 & trip_duration < 60*60*24 &
-             pickup_borough == 'New York' &
-             dropoff_borough == 'New York' &
-             !is.na(pickup_nb) &
-             !is.na(dropoff_nb) &
+             trip_distance >= 0 & trip_distance < 30 & 
+             trip_duration > 0 & trip_duration < 60*60*24 & 
+             !is.na(pickup_nb) & 
+             !is.na(dropoff_nb) & 
              fare_amount > 0), 
            varsToDrop = c('extra', 'mta_tax', 'improvement_surcharge', 'total_amount', 
                           'pickup_borough', 'dropoff_borough', 
@@ -531,8 +532,8 @@ system.time(
 The topic of evaluating models and how to improve our models was already discussed in the modeling chapter, so here we will simply pick one of the models to show how we can score a new dataset on HDFS with it. The process mirrors almost exactly what we would do in the local compute context, except that we point to data in Spark to do the scoring. In this case the scoring is happening in batch.
 
 ```{r chap10chunk36}
-taxi_score <- RxXdfData(file.path(data_path, "nyctaxiXDF03"), fileSystem = hdfsFS)
-# rxHadoopRemoveDir(taxi_score@file)
+taxi_score <- RxTextData(file.path(data_path, "nyctaxiXDF03"), fileSystem = hdfsFS)
+rxHadoopRemoveDir(taxi_score@file)
 
 rxPredict(trained_models$btree, data = taxi_new, outData = taxi_score,
           predVarNames = "good_tip_pred", 

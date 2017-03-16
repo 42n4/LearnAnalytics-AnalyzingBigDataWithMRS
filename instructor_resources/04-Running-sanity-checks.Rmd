@@ -167,7 +167,7 @@ cut(8.9, breaks = c(-Inf, 0, 5, 10, Inf), labels = c("0", "<5", "5-10", "10+"))
 
 ```{r chap04chunk13}
 rxHistogram( ~ trip_distance | pickup_hour + payment_type, nyc_xdf, startVal = 0, 
-            endVal = 25, histType = "Percent", numBreaks = 20)
+            endVal = 25, numBreaks = 20)
 ```
 
 (2) We have a choice here between two options:
@@ -178,7 +178,6 @@ Creating too many new columns in the data based on existing columns can make the
 
 ```{r chap04chunk14}
 rxHistogram( ~ trip_dist | pickup_hour + payment_type, nyc_xdf, 
-            histType = "Percent", 
             transforms = list(trip_dist = cut(trip_distance, 
                                               breaks = c(-Inf, 0, 5, 10, Inf), 
                                               labels = c("0", "<5", "5-10", "10+"))))

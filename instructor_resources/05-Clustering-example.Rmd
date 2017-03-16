@@ -30,8 +30,6 @@ rxDataStep(nyc_xdf, mht_xdf,
   rowSelection = (passenger_count > 0 &
                   trip_distance >= 0 & trip_distance < 30 &
                   trip_duration > 0 & trip_duration < 60*60*24 &
-                  str_detect(pickup_borough, 'Manhattan') &
-                  str_detect(dropoff_borough, 'Manhattan') &
                   !is.na(pickup_nb) &
                   !is.na(dropoff_nb) &
                   fare_amount > 0),
