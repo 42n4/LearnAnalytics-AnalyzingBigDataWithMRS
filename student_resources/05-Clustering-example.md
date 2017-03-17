@@ -1,7 +1,7 @@
 Clustering example
 ================
 Seth Mottaghinejad
-2017-02-17
+2017-02-28
 
 Many times we don't necessarily have to resort to using the whole dataset to extract insights from the data. In other words, we really only have a big data problem when using the whole dataset versus a much smaller sample of the data can make a big difference in insight. Even when we do have a big data problem, sampling can be an effective way to gain some preliminary insights into the problem or to speed up the algorithm.
 
@@ -72,7 +72,7 @@ mht_sample <- rxDataStep(mht_xdf, rowSelection = (u < .01), transforms = list(u 
 dim(mht_sample)
 ```
 
-    ## [1] 50060    22
+    ## [1] 49667    26
 
 Visualizing the data
 --------------------
@@ -117,7 +117,7 @@ rxkm_sample <- kmeans(xydata, centers = 300, iter.max = 2000, nstart = 50)
 Sys.time() - start_time
 ```
 
-    ## Time difference of 30.5 secs
+    ## Time difference of 50.92276 secs
 
 ``` r
 # we need to put the centroids back into the original scale for coordinates
@@ -128,13 +128,13 @@ centroids_sample <- rxkm_sample$centers %>%
 head(centroids_sample)
 ```
 
-    ##   long  lat size
-    ## 1  -74 40.8  192
-    ## 2  -74 40.8  148
-    ## 3  -74 40.8  179
-    ## 4  -74 40.8  200
-    ## 5  -74 40.8  155
-    ## 6  -74 40.7  124
+    ##        long      lat size
+    ## 1 -73.97842 40.72843  161
+    ## 2 -73.98183 40.74651  163
+    ## 3 -73.94655 40.77621  181
+    ## 4 -73.96456 40.76843  133
+    ## 5 -73.98528 40.75515  255
+    ## 6 -73.96990 40.79878  180
 
 In the above code chunk we used the `kmeans` function to cluster the sample dataset `mht_sample`. In `RevoScaleR`, there is a counterpart to the `kmeans` function called `rxKmeans`, but in addition to working with a `data.frame`, `rxKmeans` also works with XDF files. We can therefore use `rxKmeans` to create clusters from the whole data instead of the sample represented by `mht_sample`.
 
@@ -146,16 +146,10 @@ rxkm <- rxKmeans( ~ long_std + lat_std, data = mht_xdf, outFile = mht_xdf,
                                    lat_std = dropoff_latitude / 40), 
                  blocksPerRead = 1, overwrite = TRUE, maxIterations = 100, 
                  reportProgress = -1)
-```
-
-    ## 
-    ## Warning: The algorithm did not converge in 100 iterations
-
-``` r
 Sys.time() - start_time
 ```
 
-    ## Time difference of 19.8 mins
+    ## Time difference of 31.1733 mins
 
 ``` r
 clsdf <- cbind(
@@ -165,13 +159,13 @@ size = rxkm$size, withinss = rxkm$withinss)
 head(clsdf)
 ```
 
-    ##   long  lat  size   withinss
-    ## 1  -74 40.8 22906 0.00001394
-    ## 2  -74 40.8 13954 0.00000977
-    ## 3  -74 40.8 22321 0.00000729
-    ## 4  -74 40.8 21935 0.00001220
-    ## 5  -74 40.8 15193 0.00000470
-    ## 6  -74 40.7 13196 0.00000574
+    ##        long      lat  size       withinss
+    ## 1 -73.97809 40.72851 14006 0.000018173662
+    ## 2 -73.98326 40.74569 15283 0.000005647622
+    ## 3 -73.94610 40.77644 16897 0.000013809185
+    ## 4 -73.96452 40.76836 13210 0.000005649484
+    ## 5 -73.98555 40.75532 24837 0.000014139977
+    ## 6 -73.97032 40.79797 15972 0.000016071739
 
 With a little bit of work, we can extract the cluster centroids from the resulting object and plot them on a similar map. As we can see, the results are not very different, however differences do exist and depending on the use case, such small differences can have a lot of practical significance. If for example we wanted to find out which spots taxis are more likely to drop off passengers and make it illegal for street vendors to operate at those spots (in order to avoid creating too much traffic), we can do a much better job of narrowing down the spots using the clusters created from the whole data.
 
@@ -214,7 +208,7 @@ kmeans_nclus <- kmeans(xydata, centers = nclus, iter.max = 2000, nstart = 1)
 sum(kmeans_nclus$withinss)
 ```
 
-    ## [1] 0.000216
+    ## [1] 0.0002148665
 
 The number we extracted is the sum of the within-cluster sum of squares for each cluster. The **within-cluster sum of squares** (WSSs for short) is a measure of how much variability there is within each cluster. A lower WSSs indicates a more homogeneous cluster. However, we don't care about this metric per cluster. We simply seek the all the clusters' WSSs. When the number of clusters we build is small, individual clusters are less homogeneous, making the total WSSs larger. When we build a large number of clusters, the opposite is true. Therefore, total WSSs generally drops as `nclus` increases, but there is a point beyond which increasing `nclus` results in smaller and smaller drops in total WSSs. In other words, a point beyond which building a higher number of clusters is not worth the cost of increased complexity (as having more clusters makes it hard to tell them apart).
 
@@ -241,9 +235,9 @@ res
 find_wss(nclus = 10, x = xydata, iter.max = 500, nstart = 1)
 ```
 
-    ## [1] "nclus = 10, runtime = 0.16 seconds"
+    ## [1] "nclus = 10, runtime = 0.37 seconds"
 
-    ## [1] 0.00127
+    ## [1] 0.001280436
 
 1.  We use `sapply` to run the above function in a loop. This makes the notation more clean and easy to modify. We then use `ggplot2` to plot the results. Another interesting to notice is that `nclus` goes up, the function takes longer and longer to run. This has implications on building the clusters on the whole data: the number of clusters we want to build can significantly add to the runtime.
 
@@ -251,26 +245,26 @@ find_wss(nclus = 10, x = xydata, iter.max = 500, nstart = 1)
 wss <- sapply(nclus_seq, find_wss, x = xydata, iter.max = 500, nstart = 1)
 ```
 
-    ## [1] "nclus = 20, runtime = 0.26 seconds"
-    ## [1] "nclus = 70, runtime = 0.30 seconds"
-    ## [1] "nclus = 120, runtime = 0.41 seconds"
-    ## [1] "nclus = 170, runtime = 0.50 seconds"
-    ## [1] "nclus = 220, runtime = 0.49 seconds"
-    ## [1] "nclus = 270, runtime = 0.58 seconds"
-    ## [1] "nclus = 320, runtime = 0.62 seconds"
-    ## [1] "nclus = 370, runtime = 0.65 seconds"
-    ## [1] "nclus = 420, runtime = 0.62 seconds"
-    ## [1] "nclus = 470, runtime = 0.78 seconds"
-    ## [1] "nclus = 520, runtime = 0.78 seconds"
-    ## [1] "nclus = 570, runtime = 0.73 seconds"
-    ## [1] "nclus = 620, runtime = 0.88 seconds"
-    ## [1] "nclus = 670, runtime = 1.11 seconds"
-    ## [1] "nclus = 720, runtime = 1.18 seconds"
-    ## [1] "nclus = 770, runtime = 1.24 seconds"
-    ## [1] "nclus = 820, runtime = 1.18 seconds"
-    ## [1] "nclus = 870, runtime = 1.23 seconds"
-    ## [1] "nclus = 920, runtime = 1.28 seconds"
-    ## [1] "nclus = 970, runtime = 1.33 seconds"
+    ## [1] "nclus = 20, runtime = 0.34 seconds"
+    ## [1] "nclus = 70, runtime = 0.74 seconds"
+    ## [1] "nclus = 120, runtime = 0.94 seconds"
+    ## [1] "nclus = 170, runtime = 0.66 seconds"
+    ## [1] "nclus = 220, runtime = 0.51 seconds"
+    ## [1] "nclus = 270, runtime = 0.72 seconds"
+    ## [1] "nclus = 320, runtime = 0.60 seconds"
+    ## [1] "nclus = 370, runtime = 2.25 seconds"
+    ## [1] "nclus = 420, runtime = 2.67 seconds"
+    ## [1] "nclus = 470, runtime = 0.82 seconds"
+    ## [1] "nclus = 520, runtime = 1.23 seconds"
+    ## [1] "nclus = 570, runtime = 1.32 seconds"
+    ## [1] "nclus = 620, runtime = 1.37 seconds"
+    ## [1] "nclus = 670, runtime = 1.39 seconds"
+    ## [1] "nclus = 720, runtime = 3.65 seconds"
+    ## [1] "nclus = 770, runtime = 3.38 seconds"
+    ## [1] "nclus = 820, runtime = 1.37 seconds"
+    ## [1] "nclus = 870, runtime = 1.18 seconds"
+    ## [1] "nclus = 920, runtime = 1.09 seconds"
+    ## [1] "nclus = 970, runtime = 1.44 seconds"
 
 ``` r
 library(ggplot2)

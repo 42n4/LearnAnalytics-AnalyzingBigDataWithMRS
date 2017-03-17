@@ -20,6 +20,17 @@ After completing this course, participants will be able to use R and Microsoft R
 
 Throughout this course, we provide enough code examples using `RevoScaleR` that the intermediate to advanced R user would learn how to integrate `RevoScaleR` into their R workflow and use it to build scalable solution to problems involving large datasets.
 
+In addition to learning some specifics about coding in `RevoScaleR`, this course also heavily emphasizes some common themes in doing data science in general. Here are some examples of questions that we ask and explore throughout the course:
+
+ - How should a data scientist think about data and metadata?
+ - What is the big deal about big data?
+ - How do we ask questions about the data and how do we obtain answers?
+ - How do we take lots of results and summarize or visualize them in a way that make larger trends stand out?
+ - What is the [data science process life cycle](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-process-overview) and where do we go from here?
+ - How do we build basic models and compare or evaluate them?
+
+As we go through the course, we encourage everyone to keep these overarching themes in mind to develop better intuition as a data scientist.
+
 Please let us know how we can improve our content.
 
 Created by a Microsoft Employee.
