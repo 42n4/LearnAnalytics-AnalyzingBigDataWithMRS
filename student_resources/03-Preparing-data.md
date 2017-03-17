@@ -1,7 +1,7 @@
 Preparing the data
 ================
 Seth Mottaghinejad
-2017-02-17
+2017-03-08
 
 Raw data is often too primitive to be used directly for analysis. After reading in the raw data, a data scientist spends a great deal of time and effort on cleaning the data and adding the features to the data that pertain to the analysis at hand. How the data needs to be cleaned is something that is partly guided by how the analysis makes business common sense and meets certain requirements, and partly by the specific analytics algorithm that it is being fed to. In other words, it is can be somewhat subjective as long as it does not makes the analysis hard to understand.
 
@@ -23,7 +23,7 @@ rxGetInfo(nyc_xdf, getVarInfo = TRUE, numRows = 5)
 
     ## File name: C:\Data\NYC_taxi\yellow_tripsample_2016.xdf 
     ## Number of observations: 6000000 
-    ## Number of variables: 17 
+    ## Number of variables: 27 
     ## Number of blocks: 12 
     ## Compression type: zlib 
     ## Variable information: 
@@ -34,11 +34,11 @@ rxGetInfo(nyc_xdf, getVarInfo = TRUE, numRows = 5)
     ## Var 5: pickup_longitude, Type: numeric, Low/High: (-121.9337, 0.0000)
     ## Var 6: pickup_latitude, Type: numeric, Low/High: (0.0000, 57.2693)
     ## Var 7: rate_code_id
-    ##        6 factor levels: 1 5 2 3 4 6
+    ##        6 factor levels: standard JFK Newark Nassau or Westchester negotiated group ride
     ## Var 8: dropoff_longitude, Type: numeric, Low/High: (-121.9334, 0.0000)
     ## Var 9: dropoff_latitude, Type: numeric, Low/High: (0.0000, 405.3167)
     ## Var 10: payment_type
-    ##        4 factor levels: 1 2 3 4
+    ##        2 factor levels: card cash
     ## Var 11: fare_amount, Type: numeric, Low/High: (-450.0000, 628544.7400)
     ## Var 12: extra, Type: numeric, Low/High: (-35.5000, 636.1200)
     ## Var 13: mta_tax, Type: numeric, Low/High: (-2.7000, 80.5000)
@@ -46,31 +46,55 @@ rxGetInfo(nyc_xdf, getVarInfo = TRUE, numRows = 5)
     ## Var 15: tolls_amount, Type: numeric, Low/High: (-12.5000, 905.5400)
     ## Var 16: improvement_surcharge, Type: numeric, Low/High: (-0.3000, 0.7600)
     ## Var 17: total_amount, Type: numeric, Low/High: (-450.8000, 629033.7800)
+    ## Var 18: tip_percent, Type: numeric, Low/High: (-1.0000, 100.0000)
+    ## Var 19: pickup_hour
+    ##        7 factor levels: 1AM-5AM 5AM-9AM 9AM-12PM 12PM-4PM 4PM-6PM 6PM-10PM 10PM-1AM
+    ## Var 20: pickup_dow
+    ##        7 factor levels: Sun Mon Tue Wed Thu Fri Sat
+    ## Var 21: dropoff_hour
+    ##        7 factor levels: 1AM-5AM 5AM-9AM 9AM-12PM 12PM-4PM 4PM-6PM 6PM-10PM 10PM-1AM
+    ## Var 22: dropoff_dow
+    ##        7 factor levels: Sun Mon Tue Wed Thu Fri Sat
+    ## Var 23: trip_duration, Type: integer, Low/High: (-631147949, 11122910)
+    ## Var 24: pickup_nhood
+    ##        558 factor levels: 19th Ward Abbott McKinley Airmont Albright Alcove ... Woodhaven Woodlawn Woodrow Woodside Yorktown Heights
+    ## Var 25: pickup_borough
+    ##        24 factor levels: Albany Allegany Bronx Cattaraugus Dutchess ... Sullivan Tompkins Warren Westchester Wyoming
+    ## Var 26: dropoff_nhood
+    ##        558 factor levels: 19th Ward Abbott McKinley Airmont Albright Alcove ... Woodhaven Woodlawn Woodrow Woodside Yorktown Heights
+    ## Var 27: dropoff_borough
+    ##        24 factor levels: Albany Allegany Bronx Cattaraugus Dutchess ... Sullivan Tompkins Warren Westchester Wyoming
     ## Data (5 rows starting with row 1):
-    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
-    ## 1 2016-06-21 21:33:52 2016-06-21 21:34:40               5          0.40
-    ## 2 2016-06-08 09:52:19 2016-06-08 10:19:55               1          5.20
-    ## 3 2016-06-14 23:27:22 2016-06-14 23:35:05               1          2.10
-    ## 4 2016-06-12 20:13:12 2016-06-12 20:18:53               5          2.23
-    ## 5 2016-06-10 23:40:21 2016-06-11 00:05:14               3          2.72
-    ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1              -74            40.7            1               -74
-    ## 2              -74            40.8            1               -74
-    ## 3              -74            40.7            1               -74
-    ## 4              -74            40.8            1               -74
-    ## 5              -74            40.7            1               -74
-    ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1             40.7            1         3.0   0.5     0.5       0.86
-    ## 2             40.8            2        21.5   0.0     0.5       0.00
-    ## 3             40.7            1         9.0   0.5     0.5       1.50
-    ## 4             40.8            1         8.0   0.5     0.5       2.79
-    ## 5             40.7            1        17.0   0.5     0.5       3.66
-    ##   tolls_amount improvement_surcharge total_amount
-    ## 1            0                   0.3         5.16
-    ## 2            0                   0.3        22.30
-    ## 3            0                   0.3        11.80
-    ## 4            0                   0.3        12.09
-    ## 5            0                   0.3        21.96
+    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance pickup_longitude
+    ## 1 2016-06-21 21:33:52 2016-06-21 21:34:40               5          0.40        -73.97750
+    ## 2 2016-06-08 09:52:19 2016-06-08 10:19:55               1          5.20        -73.96890
+    ## 3 2016-06-14 23:27:22 2016-06-14 23:35:05               1          2.10        -73.98932
+    ## 4 2016-06-12 20:13:12 2016-06-12 20:18:53               5          2.23        -73.98183
+    ## 5 2016-06-10 23:40:21 2016-06-11 00:05:14               3          2.72        -74.00858
+    ##   pickup_latitude rate_code_id dropoff_longitude dropoff_latitude payment_type fare_amount extra
+    ## 1        40.74949     standard         -73.98100         40.74445         card         3.0   0.5
+    ## 2        40.80114     standard         -73.98331         40.75087         cash        21.5   0.0
+    ## 3        40.71869     standard         -73.96317         40.71445         card         9.0   0.5
+    ## 4        40.77286     standard         -73.95563         40.78540         card         8.0   0.5
+    ## 5        40.74144     standard         -73.98224         40.72152         card        17.0   0.5
+    ##   mta_tax tip_amount tolls_amount improvement_surcharge total_amount tip_percent pickup_hour
+    ## 1     0.5       0.86            0                   0.3         5.16          29    6PM-10PM
+    ## 2     0.5       0.00            0                   0.3        22.30           0     5AM-9AM
+    ## 3     0.5       1.50            0                   0.3        11.80          17    10PM-1AM
+    ## 4     0.5       2.79            0                   0.3        12.09          35    6PM-10PM
+    ## 5     0.5       3.66            0                   0.3        21.96          22    10PM-1AM
+    ##   pickup_dow dropoff_hour dropoff_dow trip_duration    pickup_nhood pickup_borough    dropoff_nhood
+    ## 1        Tue     6PM-10PM         Tue            48     Murray Hill       New York         Gramercy
+    ## 2        Wed     9AM-12PM         Wed          1656 Upper West Side       New York Garment District
+    ## 3        Tue     10PM-1AM         Tue           463 Lower East Side       New York     Williamsburg
+    ## 4        Sun     6PM-10PM         Sun           341 Upper West Side       New York    Carnegie Hill
+    ## 5        Fri     10PM-1AM         Sat          1493    West Village       New York     East Village
+    ##   dropoff_borough
+    ## 1        New York
+    ## 2        New York
+    ## 3           Kings
+    ## 4        New York
+    ## 5        New York
 
 Using `rxDataStep`
 ------------------
@@ -94,39 +118,8 @@ rxDataStep(nyc_xdf, nyc_xdf,
                          round(tip_amount * 100 / fare_amount, 0), 
                          NA)),
   overwrite = TRUE)
-```
-
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
-
-``` r
 rxSummary( ~ tip_percent, nyc_xdf)
 ```
-
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
 
     ## Call:
     ## rxSummary(formula = ~tip_percent, data = nyc_xdf)
@@ -136,8 +129,8 @@ rxSummary( ~ tip_percent, nyc_xdf)
     ## File name: C:/Data/NYC_taxi/yellow_tripsample_2016.xdf
     ## Number of valid observations: 6000000 
     ##  
-    ##  Name        Mean StdDev Min Max ValidObs MissingObs
-    ##  tip_percent 14   11.9   -1  100 5990374  9626
+    ##  Name        Mean    StdDev   Min Max ValidObs MissingObs
+    ##  tip_percent 13.9733 11.88687 -1  100 5990374  9626
 
 The above transformation was persisted in the data. In other words, there's is now a new column in the data called `tip_percent`. Such a transformation has IO overhead when the data is stored on disk. An alternative approach is to perform the transformation *on the fly* by putting the `transforms` argument directly inside of the `rxSummary` call instead of in a prior `rxDataStep` call. In this case, we don't pay the IO overhead of writing to data on disk.
 
@@ -149,20 +142,6 @@ rxSummary( ~ tip_percent2, nyc_xdf,
                                   NA)))
 ```
 
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
-
     ## Call:
     ## rxSummary(formula = ~tip_percent2, data = nyc_xdf, transforms = list(tip_percent2 = ifelse(fare_amount > 
     ##     0 & tip_amount < fare_amount, round(tip_amount * 100/fare_amount, 
@@ -173,8 +152,8 @@ rxSummary( ~ tip_percent2, nyc_xdf,
     ## File name: C:/Data/NYC_taxi/yellow_tripsample_2016.xdf
     ## Number of valid observations: 6000000 
     ##  
-    ##  Name         Mean StdDev Min Max ValidObs MissingObs
-    ##  tip_percent2 14   11.9   -1  100 5990374  9626
+    ##  Name         Mean    StdDev   Min Max ValidObs MissingObs
+    ##  tip_percent2 13.9733 11.88687 -1  100 5990374  9626
 
 In the above case, `tip_percent2` is calculated so `rxSummary` can then provide us with summary statistics, but the transformation does not persist in the data. We can run on the fly transformations on all of the summary and analytics functions in `RevoScaleR` in a similar fashion. For more straight-forward types of transformations, performing the transformation on the fly usually makes sense because it runs faster (no IO overhead) and prevents us from persisting too many columns in the data. It can still be beneficial to presist some transformations if the transformed columns are used repeatedly in various parts of the analysis. In the latter case, the IO overhead may be outweighed by the overhead of repeatedly performing the transformation and the inconvenience of having to copy and paste the same transformation in multiple places.
 
@@ -200,20 +179,6 @@ rxCrossTabs( ~ month:year, nyc_xdf,
                year = factor(year, levels = 2014:2016),
                month = factor(month, levels = 1:12)))
 ```
-
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
 
     ## Call:
     ## rxCrossTabs(formula = ~month:year, data = nyc_xdf, transforms = list(year = as.integer(substr(pickup_datetime, 
@@ -254,20 +219,6 @@ rxCrossTabs( ~ month:year, nyc_xdf,
                month = factor(month(date), levels = 1:12)),
              transformPackages = "lubridate")
 ```
-
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
 
     ## Call:
     ## rxCrossTabs(formula = ~month:year, data = nyc_xdf, transforms = list(date = ymd_hms(pickup_datetime), 
@@ -343,34 +294,27 @@ Sys.setenv(TZ = "US/Eastern") # not important for this dataset
 head(xforms(nyc_sample)) # test the function on a data.frame
 ```
 
-    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
-    ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20
-    ## 2 2016-01-16 22:21:42 2016-01-16 22:35:30               2          6.36
-    ## 3 2016-01-31 01:25:13 2016-01-31 01:33:31               2          2.97
-    ## 4 2016-01-09 10:27:41 2016-01-09 10:30:55               4          0.60
-    ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60
-    ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11
-    ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1              -74            40.8            1               -74
-    ## 2              -74            40.7            1               -74
-    ## 3              -74            40.7            1               -74
-    ## 4              -74            40.8            1               -74
-    ## 5              -74            40.7            1               -74
-    ## 6              -74            40.8            1               -74
-    ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1             40.8            1        11.5   0.0     0.5       3.00
-    ## 2             40.7            1        19.5   0.5     0.5       5.20
-    ## 3             40.8            1        10.0   0.5     0.5       1.00
-    ## 4             40.8            1         4.5   0.0     0.5       1.05
-    ## 5             40.8            2        10.0   0.5     0.5       0.00
-    ## 6             40.7            2        16.5   0.5     0.5       0.00
-    ##   tolls_amount improvement_surcharge total_amount pickup_hour pickup_dow
-    ## 1            0                   0.3        15.30    6PM-10PM        Sat
-    ## 2            0                   0.3        26.00    6PM-10PM        Sat
-    ## 3            0                   0.3        12.30    10PM-1AM        Sun
-    ## 4            0                   0.3         6.35    9AM-12PM        Sat
-    ## 5            0                   0.3        11.30     1AM-5AM        Fri
-    ## 6            0                   0.3        17.80    6PM-10PM        Fri
+    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance pickup_longitude
+    ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20        -73.95630
+    ## 2 2016-01-16 22:21:42 2016-01-16 22:35:30               2          6.36        -73.97758
+    ## 3 2016-01-31 01:25:13 2016-01-31 01:33:31               2          2.97        -73.98280
+    ## 4 2016-01-09 10:27:41 2016-01-09 10:30:55               4          0.60        -73.96043
+    ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60        -73.99337
+    ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11        -73.97186
+    ##   pickup_latitude rate_code_id dropoff_longitude dropoff_latitude payment_type fare_amount extra
+    ## 1        40.78182            1         -73.98237         40.77283            1        11.5   0.0
+    ## 2        40.74229            1         -73.98560         40.68565            1        19.5   0.5
+    ## 3        40.73094            1         -73.95458         40.76549            1        10.0   0.5
+    ## 4        40.76635            1         -73.95851         40.76003            1         4.5   0.0
+    ## 5        40.74152            1         -73.99491         40.76984            2        10.0   0.5
+    ## 6        40.75442            1         -74.00585         40.73620            2        16.5   0.5
+    ##   mta_tax tip_amount tolls_amount improvement_surcharge total_amount pickup_hour pickup_dow
+    ## 1     0.5       3.00            0                   0.3        15.30    6PM-10PM        Sat
+    ## 2     0.5       5.20            0                   0.3        26.00    6PM-10PM        Sat
+    ## 3     0.5       1.00            0                   0.3        12.30    10PM-1AM        Sun
+    ## 4     0.5       1.05            0                   0.3         6.35    9AM-12PM        Sat
+    ## 5     0.5       0.00            0                   0.3        11.30     1AM-5AM        Fri
+    ## 6     0.5       0.00            0                   0.3        17.80    6PM-10PM        Fri
     ##   dropoff_hour dropoff_dow trip_duration
     ## 1     6PM-10PM         Sat           844
     ## 2     6PM-10PM         Sat           828
@@ -385,37 +329,27 @@ We run one last test before applying the transformation. Recall that `rxDataStep
 head(rxDataStep(nyc_sample, transformFunc = xforms, transformPackages = "lubridate"))
 ```
 
-    ## 
-    Rows Processed: 1000
-
-    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
-    ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20
-    ## 2 2016-01-16 22:21:42 2016-01-16 22:35:30               2          6.36
-    ## 3 2016-01-31 01:25:13 2016-01-31 01:33:31               2          2.97
-    ## 4 2016-01-09 10:27:41 2016-01-09 10:30:55               4          0.60
-    ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60
-    ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11
-    ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1              -74            40.8            1               -74
-    ## 2              -74            40.7            1               -74
-    ## 3              -74            40.7            1               -74
-    ## 4              -74            40.8            1               -74
-    ## 5              -74            40.7            1               -74
-    ## 6              -74            40.8            1               -74
-    ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1             40.8            1        11.5   0.0     0.5       3.00
-    ## 2             40.7            1        19.5   0.5     0.5       5.20
-    ## 3             40.8            1        10.0   0.5     0.5       1.00
-    ## 4             40.8            1         4.5   0.0     0.5       1.05
-    ## 5             40.8            2        10.0   0.5     0.5       0.00
-    ## 6             40.7            2        16.5   0.5     0.5       0.00
-    ##   tolls_amount improvement_surcharge total_amount pickup_hour pickup_dow
-    ## 1            0                   0.3        15.30    6PM-10PM        Sat
-    ## 2            0                   0.3        26.00    6PM-10PM        Sat
-    ## 3            0                   0.3        12.30    10PM-1AM        Sun
-    ## 4            0                   0.3         6.35    9AM-12PM        Sat
-    ## 5            0                   0.3        11.30     1AM-5AM        Fri
-    ## 6            0                   0.3        17.80    6PM-10PM        Fri
+    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance pickup_longitude
+    ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20        -73.95630
+    ## 2 2016-01-16 22:21:42 2016-01-16 22:35:30               2          6.36        -73.97758
+    ## 3 2016-01-31 01:25:13 2016-01-31 01:33:31               2          2.97        -73.98280
+    ## 4 2016-01-09 10:27:41 2016-01-09 10:30:55               4          0.60        -73.96043
+    ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60        -73.99337
+    ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11        -73.97186
+    ##   pickup_latitude rate_code_id dropoff_longitude dropoff_latitude payment_type fare_amount extra
+    ## 1        40.78182            1         -73.98237         40.77283            1        11.5   0.0
+    ## 2        40.74229            1         -73.98560         40.68565            1        19.5   0.5
+    ## 3        40.73094            1         -73.95458         40.76549            1        10.0   0.5
+    ## 4        40.76635            1         -73.95851         40.76003            1         4.5   0.0
+    ## 5        40.74152            1         -73.99491         40.76984            2        10.0   0.5
+    ## 6        40.75442            1         -74.00585         40.73620            2        16.5   0.5
+    ##   mta_tax tip_amount tolls_amount improvement_surcharge total_amount pickup_hour pickup_dow
+    ## 1     0.5       3.00            0                   0.3        15.30    6PM-10PM        Sat
+    ## 2     0.5       5.20            0                   0.3        26.00    6PM-10PM        Sat
+    ## 3     0.5       1.00            0                   0.3        12.30    10PM-1AM        Sun
+    ## 4     0.5       1.05            0                   0.3         6.35    9AM-12PM        Sat
+    ## 5     0.5       0.00            0                   0.3        11.30     1AM-5AM        Fri
+    ## 6     0.5       0.00            0                   0.3        17.80    6PM-10PM        Fri
     ##   dropoff_hour dropoff_dow trip_duration
     ## 1     6PM-10PM         Sat           844
     ## 2     6PM-10PM         Sat           828
@@ -430,27 +364,10 @@ Everything seems to be working well. This does not guarantee that running the tr
 st <- Sys.time()
 rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE, transformFunc = xforms, 
            transformPackages = "lubridate")
-```
-
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
-
-``` r
 Sys.time() - st
 ```
 
-    ## Time difference of 1.24 mins
+    ## Time difference of 1.909374 mins
 
 Examining the new columns
 -------------------------
@@ -464,23 +381,6 @@ We use the same *formula notation* used by many other R modeling or plotting fun
 
 ``` r
 rxs1 <- rxSummary( ~ pickup_hour + pickup_dow + trip_duration, nyc_xdf)
-```
-
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
-
-``` r
 # we can add a column for proportions next to the counts
 rxs1$categorical <- lapply(rxs1$categorical, 
   function(x) cbind(x, prop = round(prop.table(x$Counts), 2)))
@@ -491,14 +391,13 @@ rxs1
     ## rxSummary(formula = ~pickup_hour + pickup_dow + trip_duration, 
     ##     data = nyc_xdf)
     ## 
-    ## Summary Statistics Results for: ~pickup_hour + pickup_dow +
-    ##     trip_duration
+    ## Summary Statistics Results for: ~pickup_hour + pickup_dow + trip_duration
     ## Data: nyc_xdf (RxXdfData Data Source)
     ## File name: C:/Data/NYC_taxi/yellow_tripsample_2016.xdf
     ## Number of valid observations: 6000000 
     ##  
-    ##  Name          Mean StdDev Min        Max      ValidObs MissingObs
-    ##  trip_duration 853  257845 -631147949 11122910 6000000  0         
+    ##  Name          Mean     StdDev   Min        Max      ValidObs MissingObs
+    ##  trip_duration 852.8945 257844.9 -631147949 11122910 6000000  0         
     ## 
     ## Category Counts for pickup_hour
     ## Number of categories: 7
@@ -532,23 +431,6 @@ Separating two variables by a colon $\`pickup\_dow:pickup\_hour\`$ instead of a 
 
 ``` r
 rxs2 <- rxSummary( ~ pickup_dow:pickup_hour, nyc_xdf)
-```
-
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
-
-``` r
 rxs2 <- tidyr::spread(rxs2$categorical[[1]], key = 'pickup_hour', value = 'Counts')
 row.names(rxs2) <- rxs2[ , 1]
 rxs2 <- as.matrix(rxs2[ , -1])
@@ -567,7 +449,7 @@ rxs2
 In the above case, the individual counts are not as helpful to us as proportions from those counts, and for comparing across different days of the week, we want the proportions to be based on totals for each column, not the entire table. We ask for proportions based on column totals by passing the 2 to as second argument to the `prop.table` function. We can also visually display the proportions using the `levelplot` function.
 
 ``` r
-levelplot(prop.table(rxs2, 2), cuts = 4, xlab = "", ylab = "", 
+levelplot(prop.table(rxs2, 2), cuts = 10, xlab = "", ylab = "", 
           main = "Distribution of taxis by day of week")
 ```
 
@@ -591,27 +473,22 @@ library(rgeos)
 library(maptools)
 
 nyc_shapefile <- readShapePoly('../ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
-library(stringr)
-mht_shapefile <- subset(nyc_shapefile, str_detect(CITY, 'New York City-Manhattan'))
+mht_shapefile <- subset(nyc_shapefile, City == 'New York' & County == 'New York')
 
-mht_shapefile@data$id <- as.character(mht_shapefile@data$NAME)
+mht_shapefile@data$id <- as.character(mht_shapefile@data$Name)
 library(ggplot2)
-mht.points <- fortify(gBuffer(mht_shapefile, byid = TRUE, width = 0), region = "NAME")
+mht_points <- fortify(gBuffer(mht_shapefile, byid = TRUE, width = 0), region = "Name")
 library(dplyr)
-mht.df <- inner_join(mht.points, mht_shapefile@data, by = "id")
-
-library(dplyr)
-  mht.cent <- mht.df %>%
-  group_by(id) %>%
-  summarize(long = median(long), lat = median(lat))
+mht_df <- inner_join(mht_points, mht_shapefile@data, by = "id")
+mht_cent <- cbind(mht_shapefile@data, as.data.frame(gCentroid(mht_shapefile, byid = TRUE)))
 
 library(ggrepel)
-  ggplot(mht.df, aes(long, lat, fill = id)) +
+ggplot(mht_df, aes(long, lat, fill = id)) +
   geom_polygon() +
   geom_path(color = "white") +
   coord_equal() +
   theme(legend.position = "none") +
-  geom_text_repel(aes(label = id), data = mht.cent, size = 3)
+  geom_text_repel(aes(label = id, x = x, y = y), data = mht_cent, size = 3)
 ```
 
 ![](../images/chap03chunk14-1.png)
@@ -622,7 +499,7 @@ The NYC Taxi dataset has a [data dictionary](http://www.nyc.gov/html/tlc/downloa
 
 1.  Based on the information in the data dictionary, run a transformation that coverts `rate_code_id` and `payment_type` into `factor` columns (if it's not one already) with the proper labels. In the case of `payment_type`, lump anything that isn't card or cash into a generic third category.
 
-In the last section, we stored the shapefile for Manhattan in an object called `mht_shapefile`, which we than used to plot a map of Manhattan neighborhoods. Let's now see how we can use the same shapefile along with the function `over` (part of the `sp` package) to find out pick-up and drop-off neighborhoods for each trip. We will demonstrate how we can do that with a `data.frame` (using the sample of the NYC taxi data we took earlier) and leave it as an exercise to find out how we can wrap the code in a transformation function and apply it to the XDF data.
+In the last section, we stored the shapefile for NYC in an object called `nyc_shapefile`, which we then used to plot a map of Manhattan neighborhoods. Let's now see how we can use the same shapefile along with the function `over` (part of the `sp` package) to find out pick-up and drop-off neighborhoods for each trip. We will demonstrate how we can do that with a `data.frame` (using the sample of the NYC taxi data we took earlier) and leave it as an exercise to find out how we can wrap the code in a transformation function and apply it to the XDF data.
 
 To add pick-up neighborhood columns to `nyc_sample`, we need to do as follows: - replace NAs in `pickup_latitude` and `pickup_longitude` with 0, otherwise we will get an error - use the `coordinates` function to specify that the above two columns represent the geographical coordinates in the data - use the `over` function to get neighborhoods based on the coordinates specified above, which returns a `data.frame` with neighborhood information - attach the results to the original data using `cbind` after giving them relevant column names
 
@@ -643,41 +520,34 @@ nyc_sample <- cbind(nyc_sample, nhoods)
 head(nyc_sample)
 ```
 
-    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
-    ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20
-    ## 2 2016-01-16 22:21:42 2016-01-16 22:35:30               2          6.36
-    ## 3 2016-01-31 01:25:13 2016-01-31 01:33:31               2          2.97
-    ## 4 2016-01-09 10:27:41 2016-01-09 10:30:55               4          0.60
-    ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60
-    ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11
-    ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1              -74            40.8            1               -74
-    ## 2              -74            40.7            1               -74
-    ## 3              -74            40.7            1               -74
-    ## 4              -74            40.8            1               -74
-    ## 5              -74            40.7            1               -74
-    ## 6              -74            40.8            1               -74
-    ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1             40.8            1        11.5   0.0     0.5       3.00
-    ## 2             40.7            1        19.5   0.5     0.5       5.20
-    ## 3             40.8            1        10.0   0.5     0.5       1.00
-    ## 4             40.8            1         4.5   0.0     0.5       1.05
-    ## 5             40.8            2        10.0   0.5     0.5       0.00
-    ## 6             40.7            2        16.5   0.5     0.5       0.00
-    ##   tolls_amount improvement_surcharge total_amount pickup_state
-    ## 1            0                   0.3        15.30           NY
-    ## 2            0                   0.3        26.00           NY
-    ## 3            0                   0.3        12.30           NY
-    ## 4            0                   0.3         6.35           NY
-    ## 5            0                   0.3        11.30           NY
-    ## 6            0                   0.3        17.80           NY
-    ##   pickup_county             pickup_city     pickup_name pickup_regionid
-    ## 1      New York New York City-Manhattan   Carnegie Hill          270810
-    ## 2      New York New York City-Manhattan        Gramercy          273860
-    ## 3      New York New York City-Manhattan    East Village          270829
-    ## 4      New York New York City-Manhattan Upper East Side          270957
-    ## 5      New York New York City-Manhattan         Chelsea          276254
-    ## 6      New York New York City-Manhattan         Midtown          270885
+    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance pickup_longitude
+    ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20        -73.95630
+    ## 2 2016-01-16 22:21:42 2016-01-16 22:35:30               2          6.36        -73.97758
+    ## 3 2016-01-31 01:25:13 2016-01-31 01:33:31               2          2.97        -73.98280
+    ## 4 2016-01-09 10:27:41 2016-01-09 10:30:55               4          0.60        -73.96043
+    ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60        -73.99337
+    ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11        -73.97186
+    ##   pickup_latitude rate_code_id dropoff_longitude dropoff_latitude payment_type fare_amount extra
+    ## 1        40.78182            1         -73.98237         40.77283            1        11.5   0.0
+    ## 2        40.74229            1         -73.98560         40.68565            1        19.5   0.5
+    ## 3        40.73094            1         -73.95458         40.76549            1        10.0   0.5
+    ## 4        40.76635            1         -73.95851         40.76003            1         4.5   0.0
+    ## 5        40.74152            1         -73.99491         40.76984            2        10.0   0.5
+    ## 6        40.75442            1         -74.00585         40.73620            2        16.5   0.5
+    ##   mta_tax tip_amount tolls_amount improvement_surcharge total_amount pickup_state pickup_county
+    ## 1     0.5       3.00            0                   0.3        15.30           NY      New York
+    ## 2     0.5       5.20            0                   0.3        26.00           NY      New York
+    ## 3     0.5       1.00            0                   0.3        12.30           NY      New York
+    ## 4     0.5       1.05            0                   0.3         6.35           NY      New York
+    ## 5     0.5       0.00            0                   0.3        11.30           NY      New York
+    ## 6     0.5       0.00            0                   0.3        17.80           NY      New York
+    ##   pickup_city       pickup_name pickup_regionid
+    ## 1    New York     Carnegie Hill          270810
+    ## 2    New York          Gramercy          273860
+    ## 3    New York      East Village          270829
+    ## 4    New York   Upper East Side          270957
+    ## 5    New York Flatiron District          403206
+    ## 6    New York        Turtle Bay          270953
 
 The neighborhood columns were successfully added to the data. We can repeat the same process to get drop-off neighborhood information.
 
@@ -704,13 +574,8 @@ Now that we've got our function, it's time to test it. We can do so by running `
 head(rxDataStep(nyc_sample, 
                 transformFunc = find_nhoods, 
                 transformPackages = c("sp", "maptools"), 
-                transformObjects = list(shapefile = mht_shapefile)))
+                transformObjects = list(shapefile = nyc_shapefile)))
 ```
-
-    ## 
-    Rows Processed: 1000
-
-    ## NULL
 
 1.  Did the transformation work? If not, we can go back to `find_nhoods` and keep making changes until we have the right transformation.
 
@@ -731,20 +596,6 @@ rxDataStep(nyc_xdf, nyc_xdf,
   overwrite = TRUE)
 ```
 
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
-
 1.  Because we want to apply the transformation to the large data `nyc_xdf`, we need to make sure that we don't add unnecessary columns and that the columns have the appropriate types.
 
 ``` r
@@ -753,11 +604,11 @@ str(nhoods)
 ```
 
     ## 'data.frame':    1000 obs. of  6 variables:
-    ##  $ STATE   : Factor w/ 1 level "NY": 1 1 1 1 1 1 1 1 1 1 ...
-    ##  $ COUNTY  : Factor w/ 9 levels "Albany","Bronx",..: 6 6 6 6 6 6 6 6 6 6 ...
-    ##  $ CITY    : Factor w/ 9 levels "Albany","Buffalo",..: 5 5 5 5 5 5 5 5 5 5 ...
-    ##  $ NAME    : Factor w/ 263 levels "19th Ward","Abbott McKinley",..: 36 99 74 239 46 149 234 51 103 156 ...
-    ##  $ REGIONID: num  270810 273860 270829 270957 276254 ...
+    ##  $ State   : Factor w/ 1 level "NY": 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ County  : Factor w/ 24 levels "Albany","Allegany",..: 10 10 10 10 10 10 10 10 10 10 ...
+    ##  $ City    : Factor w/ 50 levels "Albany","Alma",..: 25 25 25 25 25 25 25 25 25 25 ...
+    ##  $ Name    : Factor w/ 558 levels "19th Ward","Abbott McKinley",..: 76 203 146 509 171 501 499 98 220 332 ...
+    ##  $ RegionID: Factor w/ 575 levels "10007","10329",..: 152 269 162 233 470 231 229 257 72 281 ...
     ##  $ id      : chr  "Carnegie Hill" "Gramercy" "East Village" "Upper East Side" ...
 
 The shapefile contains a few columns we don't need. The neighborhood column is called `NAME` and the city column is called `CITY` (which for NYC also contains the name of the borough). The appropriate column type for both is `factor`, which is already the case.
@@ -773,8 +624,8 @@ find_nhoods <- function(data) {
   coordinates(data_coords) <- c('long', 'lat')
   nhoods <- over(data_coords, shapefile)
   # add only the pick-up neighborhood and city columns to the data
-  data$pickup_nhood <- nhoods$NAME
-  data$pickup_borough <- nhoods$CITY
+  data$pickup_nhood <- nhoods$Name
+  data$pickup_borough <- nhoods$County
   # extract drop-off lat and long and find their neighborhoods
   dropoff_longitude <- ifelse(is.na(data$dropoff_longitude), 0, data$dropoff_longitude)
   dropoff_latitude <- ifelse(is.na(data$dropoff_latitude), 0, data$dropoff_latitude)
@@ -782,8 +633,8 @@ find_nhoods <- function(data) {
   coordinates(data_coords) <- c('long', 'lat')
   nhoods <- over(data_coords, shapefile)
   # add only the drop-off neighborhood and city columns to the data
-  data$dropoff_nhood <- nhoods$NAME
-  data$dropoff_borough <- nhoods$CITY
+  data$dropoff_nhood <- nhoods$Name
+  data$dropoff_borough <- nhoods$County
   # return the data with the new columns added in
   data
 }
@@ -798,58 +649,41 @@ head(rxDataStep(nyc_sample, transformFunc = find_nhoods,
                 transformObjects = list(shapefile = nyc_shapefile)))
 ```
 
-    ## 
-    Rows Processed: 1000
-
-    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
-    ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20
-    ## 2 2016-01-16 22:21:42 2016-01-16 22:35:30               2          6.36
-    ## 3 2016-01-31 01:25:13 2016-01-31 01:33:31               2          2.97
-    ## 4 2016-01-09 10:27:41 2016-01-09 10:30:55               4          0.60
-    ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60
-    ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11
-    ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1              -74            40.8            1               -74
-    ## 2              -74            40.7            1               -74
-    ## 3              -74            40.7            1               -74
-    ## 4              -74            40.8            1               -74
-    ## 5              -74            40.7            1               -74
-    ## 6              -74            40.8            1               -74
-    ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1             40.8            1        11.5   0.0     0.5       3.00
-    ## 2             40.7            1        19.5   0.5     0.5       5.20
-    ## 3             40.8            1        10.0   0.5     0.5       1.00
-    ## 4             40.8            1         4.5   0.0     0.5       1.05
-    ## 5             40.8            2        10.0   0.5     0.5       0.00
-    ## 6             40.7            2        16.5   0.5     0.5       0.00
-    ##   tolls_amount improvement_surcharge total_amount pickup_state
-    ## 1            0                   0.3        15.30           NY
-    ## 2            0                   0.3        26.00           NY
-    ## 3            0                   0.3        12.30           NY
-    ## 4            0                   0.3         6.35           NY
-    ## 5            0                   0.3        11.30           NY
-    ## 6            0                   0.3        17.80           NY
-    ##   pickup_county             pickup_city     pickup_name pickup_regionid
-    ## 1      New York New York City-Manhattan   Carnegie Hill          270810
-    ## 2      New York New York City-Manhattan        Gramercy          273860
-    ## 3      New York New York City-Manhattan    East Village          270829
-    ## 4      New York New York City-Manhattan Upper East Side          270957
-    ## 5      New York New York City-Manhattan         Chelsea          276254
-    ## 6      New York New York City-Manhattan         Midtown          270885
-    ##      pickup_nhood          pickup_borough   dropoff_nhood
-    ## 1   Carnegie Hill New York City-Manhattan Upper West Side
-    ## 2        Gramercy New York City-Manhattan     Boerum Hill
-    ## 3    East Village New York City-Manhattan Upper East Side
-    ## 4 Upper East Side New York City-Manhattan Upper East Side
-    ## 5         Chelsea New York City-Manhattan         Midtown
-    ## 6         Midtown New York City-Manhattan    West Village
-    ##           dropoff_borough
-    ## 1 New York City-Manhattan
-    ## 2  New York City-Brooklyn
-    ## 3 New York City-Manhattan
-    ## 4 New York City-Manhattan
-    ## 5 New York City-Manhattan
-    ## 6 New York City-Manhattan
+    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance pickup_longitude
+    ## 1 2016-01-16 19:30:38 2016-01-16 19:44:42               1          2.20        -73.95630
+    ## 2 2016-01-16 22:21:42 2016-01-16 22:35:30               2          6.36        -73.97758
+    ## 3 2016-01-31 01:25:13 2016-01-31 01:33:31               2          2.97        -73.98280
+    ## 4 2016-01-09 10:27:41 2016-01-09 10:30:55               4          0.60        -73.96043
+    ## 5 2016-01-01 03:48:48 2016-01-01 03:58:20               3          2.60        -73.99337
+    ## 6 2016-01-22 21:11:53 2016-01-22 21:37:07               1          3.11        -73.97186
+    ##   pickup_latitude rate_code_id dropoff_longitude dropoff_latitude payment_type fare_amount extra
+    ## 1        40.78182            1         -73.98237         40.77283            1        11.5   0.0
+    ## 2        40.74229            1         -73.98560         40.68565            1        19.5   0.5
+    ## 3        40.73094            1         -73.95458         40.76549            1        10.0   0.5
+    ## 4        40.76635            1         -73.95851         40.76003            1         4.5   0.0
+    ## 5        40.74152            1         -73.99491         40.76984            2        10.0   0.5
+    ## 6        40.75442            1         -74.00585         40.73620            2        16.5   0.5
+    ##   mta_tax tip_amount tolls_amount improvement_surcharge total_amount pickup_state pickup_county
+    ## 1     0.5       3.00            0                   0.3        15.30           NY      New York
+    ## 2     0.5       5.20            0                   0.3        26.00           NY      New York
+    ## 3     0.5       1.00            0                   0.3        12.30           NY      New York
+    ## 4     0.5       1.05            0                   0.3         6.35           NY      New York
+    ## 5     0.5       0.00            0                   0.3        11.30           NY      New York
+    ## 6     0.5       0.00            0                   0.3        17.80           NY      New York
+    ##   pickup_city       pickup_name pickup_regionid      pickup_nhood pickup_borough   dropoff_nhood
+    ## 1    New York     Carnegie Hill          270810     Carnegie Hill       New York Upper West Side
+    ## 2    New York          Gramercy          273860          Gramercy       New York     Boerum Hill
+    ## 3    New York      East Village          270829      East Village       New York Upper East Side
+    ## 4    New York   Upper East Side          270957   Upper East Side       New York Upper East Side
+    ## 5    New York Flatiron District          403206 Flatiron District       New York Columbus Circle
+    ## 6    New York        Turtle Bay          270953        Turtle Bay       New York    West Village
+    ##   dropoff_borough
+    ## 1        New York
+    ## 2           Kings
+    ## 3        New York
+    ## 4        New York
+    ## 5        New York
+    ## 6        New York
 
 The last four columns in the data correspond to the neighborhood columns we wanted.
 
@@ -866,27 +700,11 @@ rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE,
            transformFunc = find_nhoods, 
            transformPackages = c("sp", "maptools", "rgeos"), 
            transformObjects = list(shapefile = nyc_shapefile))
-```
 
-    ## 
-    Rows Processed: 500000
-    Rows Processed: 1000000
-    Rows Processed: 1500000
-    Rows Processed: 2000000
-    Rows Processed: 2500000
-    Rows Processed: 3000000
-    Rows Processed: 3500000
-    Rows Processed: 4000000
-    Rows Processed: 4500000
-    Rows Processed: 5000000
-    Rows Processed: 5500000
-    Rows Processed: 6000000
-
-``` r
 Sys.time() - st
 ```
 
-    ## Time difference of 2.82 mins
+    ## Time difference of 4.426033 mins
 
 ``` r
 rxGetInfo(nyc_xdf, numRows = 5)
@@ -898,39 +716,33 @@ rxGetInfo(nyc_xdf, numRows = 5)
     ## Number of blocks: 12 
     ## Compression type: zlib 
     ## Data (5 rows starting with row 1):
-    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance
-    ## 1 2016-06-21 21:33:52 2016-06-21 21:34:40               5          0.40
-    ## 2 2016-06-08 09:52:19 2016-06-08 10:19:55               1          5.20
-    ## 3 2016-06-14 23:27:22 2016-06-14 23:35:05               1          2.10
-    ## 4 2016-06-12 20:13:12 2016-06-12 20:18:53               5          2.23
-    ## 5 2016-06-10 23:40:21 2016-06-11 00:05:14               3          2.72
-    ##   pickup_longitude pickup_latitude rate_code_id dropoff_longitude
-    ## 1              -74            40.7     standard               -74
-    ## 2              -74            40.8     standard               -74
-    ## 3              -74            40.7     standard               -74
-    ## 4              -74            40.8     standard               -74
-    ## 5              -74            40.7     standard               -74
-    ##   dropoff_latitude payment_type fare_amount extra mta_tax tip_amount
-    ## 1             40.7         card         3.0   0.5     0.5       0.86
-    ## 2             40.8         cash        21.5   0.0     0.5       0.00
-    ## 3             40.7         card         9.0   0.5     0.5       1.50
-    ## 4             40.8         card         8.0   0.5     0.5       2.79
-    ## 5             40.7         card        17.0   0.5     0.5       3.66
-    ##   tolls_amount improvement_surcharge total_amount tip_percent pickup_hour
-    ## 1            0                   0.3         5.16          29    6PM-10PM
-    ## 2            0                   0.3        22.30           0     5AM-9AM
-    ## 3            0                   0.3        11.80          17    10PM-1AM
-    ## 4            0                   0.3        12.09          35    6PM-10PM
-    ## 5            0                   0.3        21.96          22    10PM-1AM
-    ##   pickup_dow dropoff_hour dropoff_dow trip_duration    pickup_nhood
-    ## 1        Tue     6PM-10PM         Tue            48     Murray Hill
-    ## 2        Wed     9AM-12PM         Wed          1656 Upper West Side
-    ## 3        Tue     10PM-1AM         Tue           463 Lower East Side
-    ## 4        Sun     6PM-10PM         Sun           341 Upper West Side
-    ## 5        Fri     10PM-1AM         Sat          1493    West Village
-    ##            pickup_borough    dropoff_nhood         dropoff_borough
-    ## 1 New York City-Manhattan         Gramercy New York City-Manhattan
-    ## 2 New York City-Manhattan Garment District New York City-Manhattan
-    ## 3 New York City-Manhattan     Williamsburg  New York City-Brooklyn
-    ## 4 New York City-Manhattan    Carnegie Hill New York City-Manhattan
-    ## 5 New York City-Manhattan  Lower East Side New York City-Manhattan
+    ##       pickup_datetime    dropoff_datetime passenger_count trip_distance pickup_longitude
+    ## 1 2016-06-21 21:33:52 2016-06-21 21:34:40               5          0.40        -73.97750
+    ## 2 2016-06-08 09:52:19 2016-06-08 10:19:55               1          5.20        -73.96890
+    ## 3 2016-06-14 23:27:22 2016-06-14 23:35:05               1          2.10        -73.98932
+    ## 4 2016-06-12 20:13:12 2016-06-12 20:18:53               5          2.23        -73.98183
+    ## 5 2016-06-10 23:40:21 2016-06-11 00:05:14               3          2.72        -74.00858
+    ##   pickup_latitude rate_code_id dropoff_longitude dropoff_latitude payment_type fare_amount extra
+    ## 1        40.74949         <NA>         -73.98100         40.74445         <NA>         3.0   0.5
+    ## 2        40.80114         <NA>         -73.98331         40.75087         <NA>        21.5   0.0
+    ## 3        40.71869         <NA>         -73.96317         40.71445         <NA>         9.0   0.5
+    ## 4        40.77286         <NA>         -73.95563         40.78540         <NA>         8.0   0.5
+    ## 5        40.74144         <NA>         -73.98224         40.72152         <NA>        17.0   0.5
+    ##   mta_tax tip_amount tolls_amount improvement_surcharge total_amount tip_percent pickup_hour
+    ## 1     0.5       0.86            0                   0.3         5.16          29    6PM-10PM
+    ## 2     0.5       0.00            0                   0.3        22.30           0     5AM-9AM
+    ## 3     0.5       1.50            0                   0.3        11.80          17    10PM-1AM
+    ## 4     0.5       2.79            0                   0.3        12.09          35    6PM-10PM
+    ## 5     0.5       3.66            0                   0.3        21.96          22    10PM-1AM
+    ##   pickup_dow dropoff_hour dropoff_dow trip_duration    pickup_nhood pickup_borough    dropoff_nhood
+    ## 1        Tue     6PM-10PM         Tue            48     Murray Hill       New York         Gramercy
+    ## 2        Wed     9AM-12PM         Wed          1656 Upper West Side       New York Garment District
+    ## 3        Tue     10PM-1AM         Tue           463 Lower East Side       New York     Williamsburg
+    ## 4        Sun     6PM-10PM         Sun           341 Upper West Side       New York    Carnegie Hill
+    ## 5        Fri     10PM-1AM         Sat          1493    West Village       New York     East Village
+    ##   dropoff_borough
+    ## 1        New York
+    ## 2        New York
+    ## 3           Kings
+    ## 4        New York
+    ## 5        New York
