@@ -382,26 +382,3 @@ rxPredict(trained_models$btree, data = taxi_new, outData = taxi_score,
           predVarNames = "good_tip_pred", 
           extraVarsToWrite = c("pickup_datetime", "dropoff_datetime"))
 
-## ----chap10chunk37-------------------------------------------------------
-library(dplyr)
-
-nbs_df <- rxCube(~ pickup_nb + dropoff_nb + pickup_hour, data = taxi_new, returnDataFrame = TRUE)
-nbs_df <- nbs_df %>% tbl_df %>%
-  filter(Counts >= 100) %>% 
-  mutate(width = ntile(Counts, 5))
-
-## ----chap10chunk38, eval=FALSE-------------------------------------------
-## library(purrr)
-## library(circlize)
-## 
-## nbs <- c("Lower East Side", "East Village", "Chelsea", "Midtown",
-##          "Upper East Side", "Upper West Side", "Greenwich Vilalge")
-## 
-## chord_diag <- . %>% select(pickup_nb, dropoff_nb, width) %>% chordDiagram()
-## 
-## chord_plot <- nbs_df %>%
-##   filter(pickup_nb %in% nbs,
-##          dropoff_nb %in% nbs) %>%
-##   split(.$pickup_hour) %>%
-##   map(chord_diag)
-

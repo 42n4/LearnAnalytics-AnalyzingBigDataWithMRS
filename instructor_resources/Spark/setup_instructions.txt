@@ -14,7 +14,7 @@ Ambari          : "********"
 head_node       : "********"
 worker_node     : ["********"]
 
-# step 2: pin R Server to dashboard
+# step 2 (optional): pin R Server to dashboard
 
 # step 3: log in with admin credentials and then use sparkuser credentials to log into RStudio
 

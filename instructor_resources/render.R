@@ -20,7 +20,6 @@ dir("../student_resources")
 # find out why payment_type and rate_code_id are <NA>
 # find out why trip_duration is missing for plots
 
-
 library(knitr)
 purl("01-Getting-started.Rmd")
 purl("02-Reading-data.Rmd")
