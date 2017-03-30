@@ -532,7 +532,7 @@ system.time(
 The topic of evaluating models and how to improve our models was already discussed in the modeling chapter, so here we will simply pick one of the models to show how we can score a new dataset on HDFS with it. The process mirrors almost exactly what we would do in the local compute context, except that we point to data in Spark to do the scoring. In this case the scoring is happening in batch.
 
 ```{r chap10chunk36}
-taxi_score <- RxTextData(file.path(data_path, "nyctaxiXDF03"), fileSystem = hdfsFS)
+taxi_score <- RxXdfData(file.path(data_path, "nyctaxiXDF03"), fileSystem = hdfsFS)
 rxHadoopRemoveDir(taxi_score@file)
 
 rxPredict(trained_models$btree, data = taxi_new, outData = taxi_score,
