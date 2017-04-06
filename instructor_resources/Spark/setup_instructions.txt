@@ -1,18 +1,17 @@
 
 # step 1: from the portal provision a Spark cluster and fill in the info below
-cluster_name    : "*****"
-admin_login     : "*****"
-admin_pwd       : "*****"
-ssh_login       : "sparkuser"
-ssh_pwd         : "*****"
-resource_group  : "*****"
-region          : "*****"
-storage_account : "*****"
-edge_node       : "*****"
-RStudio         : "*****"
-Ambari          : "*****"
-head_node       : "*****"
-worker_node     : [*****]
+cluster_name    : *****
+admin_login     : *****
+admin_pwd       : *****
+ssh_pwd         : *****
+resource_group  : *****
+region          : *****
+storage_account : *****
+edge_node       : *****
+RStudio         : *****
+Ambari          : *****
+head_node       : *****
+worker_node     : *****
 
 # step 2 (optional): pin R Server to dashboard
 
