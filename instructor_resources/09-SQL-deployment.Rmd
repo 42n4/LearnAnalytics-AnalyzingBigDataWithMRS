@@ -147,7 +147,7 @@ GO
 The content of the original 6 CSV files were now placed inside a SQL table called `NYCTaxiSmall`. We can now point to this table in R:
 
 ```{r chap09chunk02}
-sqlConnString <- sprintf("Driver=SQL Server;Server=%s;Database=RDB;Uid=ruser;Pwd=ruser", SQLSERVERNAME)
+sqlConnString <- "Driver=SQL Server;Server=.;Database=RDB;Uid=ruser;Pwd=ruser"
 sqlRowsPerRead <- 100000
 sqlTable <- "NYCTaxiSmall"
 

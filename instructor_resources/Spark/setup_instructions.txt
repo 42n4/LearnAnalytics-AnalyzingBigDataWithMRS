@@ -3,6 +3,7 @@
 cluster_name    : *****
 admin_login     : *****
 admin_pwd       : *****
+ssh_login       : sparkuser
 ssh_pwd         : *****
 resource_group  : *****
 region          : *****
