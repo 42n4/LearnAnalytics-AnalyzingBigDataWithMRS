@@ -213,7 +213,7 @@ We begin by plotting a map of Manhattan neighborhoods, so we can see the neighbo
 library(rgeos)
 library(maptools)
 
-nyc_shapefile <- readShapePoly('../ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp')
+nyc_shapefile <- readShapePoly(file.path(data_dir, '/ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp'))
 mht_shapefile <- subset(nyc_shapefile, City == 'New York' & County == 'New York')
 
 mht_shapefile@data$id <- as.character(mht_shapefile@data$Name)

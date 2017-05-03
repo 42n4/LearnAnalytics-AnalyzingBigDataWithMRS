@@ -375,7 +375,7 @@ system.time(
 )
 
 ## ----chap10chunk36-------------------------------------------------------
-taxi_score <- RxTextData(file.path(data_path, "nyctaxiXDF03"), fileSystem = hdfsFS)
+taxi_score <- RxXdfData(file.path(data_path, "nyctaxiXDF03"), fileSystem = hdfsFS)
 rxHadoopRemoveDir(taxi_score@file)
 
 rxPredict(trained_models$btree, data = taxi_new, outData = taxi_score,

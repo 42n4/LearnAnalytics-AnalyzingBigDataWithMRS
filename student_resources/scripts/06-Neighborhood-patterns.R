@@ -1,3 +1,5 @@
+## ----chap06chunk01, include=FALSE----------------------------------------
+source('setup.R')
 
 ## ----chap06chunk02-------------------------------------------------------
 rxct <- rxCrossTabs(trip_distance ~ pickup_nb:dropoff_nb, mht_xdf)
@@ -11,8 +13,7 @@ nb_order <- seriate(res)
 rxc1 <- rxCube(trip_distance ~ pickup_nb:dropoff_nb, mht_xdf)
 rxc2 <- rxCube(minutes_per_mile ~ pickup_nb:dropoff_nb, mht_xdf, 
                transforms = list(minutes_per_mile = (trip_duration/60)/trip_distance))
-rxc3 <- rxCube(tip_percent ~ pickup_nb:dropoff_nb, mht_xdf,
-               rowSelection = (payment_type == "card"))
+rxc3 <- rxCube(tip_percent ~ pickup_nb:dropoff_nb, mht_xdf)
 library(dplyr)
 res <- bind_cols(list(rxc1, rxc2, rxc3))
 res <- res[ , c('pickup_nb', 'dropoff_nb', 'trip_distance', 'minutes_per_mile', 'tip_percent')]
@@ -46,15 +47,7 @@ ggplot(res, aes(pickup_nb, dropoff_nb)) +
 
 ## ----chap06chunk07-------------------------------------------------------
 res %>%
-  mutate(tip_color = cut(tip_percent, c(0, 15, 18, 22, 25, 100))) %>%
-  ggplot(aes(pickup_nb, dropoff_nb)) +
-  geom_tile(aes(fill = tip_color)) +
-  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
-  coord_fixed(ratio = .9)
-
-res %>%
-  #mutate(tip_color = cut(tip_percent, c(0, 8, 12, 15, 100))) %>%
-  mutate(tip_color = cut(tip_percent, quantile(tip_percent,na.rm=TRUE) )) %>%
+  mutate(tip_color = cut(tip_percent, c(0, 8, 12, 15, 100))) %>%
   ggplot(aes(pickup_nb, dropoff_nb)) +
   geom_tile(aes(fill = tip_color)) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
@@ -70,11 +63,11 @@ rxDataStep(inData = mht_xdf, outFile = mht_xdf,
 
 ## ----chap06chunk09, eval=FALSE-------------------------------------------
 ## # second way of reordering the factor levels
-# rxFactors(mht_xdf, outFile = mht_xdf,
-# 	factorInfo = list(
-# 		pickup_nb = list(newLevels = unique(newlevs)),
-# 		dropoff_nb = list(newLevels = unique(newlevs))),
-# 	overwrite = TRUE)
+## rxFactors(mht_xdf, outFile = mht_xdf,
+## 	factorInfo = list(
+## 		pickup_nb = list(newLevels = unique(newlevs)),
+## 		dropoff_nb = list(newLevels = unique(newlevs))),
+## 	overwrite = TRUE)
 
 ## ----chap06chunk10-------------------------------------------------------
 rxc <- rxCube( ~ pickup_nb:dropoff_nb, mht_xdf)
@@ -96,7 +89,7 @@ head(rxcs)
 ggplot(rxcs, aes(pickup_nb, dropoff_nb)) +
   geom_tile(aes(fill = pct_all), colour = "white") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
-  scale_fill_gradient(low = "white", high = "blue") +
+  scale_fill_gradient(low = "white", high = "black") +
   coord_fixed(ratio = .9)
 
 ## ----chap06chunk12-------------------------------------------------------
@@ -119,22 +112,22 @@ rxcs %>%
   arrange(pickup_nb, desc(pct))
 
 ## ----chap06chunk15, eval=FALSE-------------------------------------------
-nb_name <- "West Village" # a neighborhood of our choosing
-nb_drop <- ## pull the most common destinations for this neighborhood from `rxcs_tops`
-
-pickup_df <- rxDataStep(mht_xdf, # we leave out outFile and store results in pickup_df
-  rowSelection = ## select the relevant subset of the data
-  varsToKeep = c("dropoff_nb", "pickup_datetime"),
-  transformObjects = ## a list, used to pass `nb_name` and `nb_drop` to rowSelection
-  )
+## nb_name <- "West Village" # a neighborhood of our choosing
+## nb_drop <- ## pull the most common destinations for this neighborhood from `rxcs_tops`
+## 
+## pickup_df <- rxDataStep(mht_xdf, # we leave out outFile and store results in pickup_df
+##   rowSelection = ## select the relevant subset of the data
+##   varsToKeep = c("dropoff_nb", "pickup_datetime"),
+##   transformObjects = ## a list, used to pass `nb_name` and `nb_drop` to rowSelection
+##   )
 
 ## ----chap06chunk16, eval=FALSE-------------------------------------------
-library(lubridate)
-pickup_df %>%
-  mutate(pickup_hour = hour(ymd_hms(pickup_datetime, tz = "UTC"))) %>%
-  ggplot(aes(x = pickup_hour, fill = dropoff_nb)) +
-  geom_bar(position = "stack", stat = "count") +
-  scale_fill_discrete(guide = guide_legend(reverse = TRUE))
+## library(lubridate)
+## pickup_df %>%
+##   mutate(pickup_hour = hour(ymd_hms(pickup_datetime, tz = "UTC"))) %>%
+##   ggplot(aes(x = pickup_hour, fill = dropoff_nb)) +
+##   geom_bar(position = "stack", stat = "count") +
+##   scale_fill_discrete(guide = guide_legend(reverse = TRUE))
 
 ## ----chap06chunk17-------------------------------------------------------
 rxcs %>%

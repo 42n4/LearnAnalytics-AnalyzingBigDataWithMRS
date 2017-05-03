@@ -1,3 +1,5 @@
+## ----chap05chunk01, include=FALSE----------------------------------------
+source('setup.R')
 
 ## ----chap05chunk02-------------------------------------------------------
 input_xdf <- file.path(data_dir, 'yellow_tripdata_2016_clean.xdf')
@@ -55,7 +57,6 @@ centroids_sample <- rxkm_sample$centers %>%
   transmute(long = long_std*(-74), lat = lat_std*40, size = rxkm_sample$size)
 
 head(centroids_sample)
-arrange(centroids_sample, desc(size))
 
 ## ----chap05chunk06-------------------------------------------------------
 start_time <- Sys.time()
@@ -104,10 +105,10 @@ nclus_seq <- seq(20, 1000, by = 50)
 
 ## ----chap05chunk10-------------------------------------------------------
 find_wss <- function(nclus, ...) {
-  st <- Sys.time()
-  res <- sum(kmeans(centers = nclus, ...)$withinss)
-  print(sprintf("nclus = %d, runtime = %3.2f seconds", nclus, Sys.time() - st))
-  res
+st <- Sys.time()
+res <- sum(kmeans(centers = nclus, ...)$withinss)
+print(sprintf("nclus = %d, runtime = %3.2f seconds", nclus, Sys.time() - st))
+res
 }
 
 find_wss(nclus = 10, x = xydata, iter.max = 500, nstart = 1)

@@ -1,19 +1,10 @@
+## ----chap03chunk01, include=FALSE----------------------------------------
+source('setup.R')
 
 ## ----chap03chunk02-------------------------------------------------------
 rxGetInfo(nyc_xdf, getVarInfo = TRUE, numRows = 5)
 
 ## ----chap03chunk03-------------------------------------------------------
-
-nyc_sample$tip_percent <- ifelse(nyc_sample$fare_amount > 0 & nyc_sample$tip_amount < nyc_sample$fare_amount, 
-                                 round(nyc_sample$tip_amount * 100 / nyc_sample$fare_amount, 0), 
-                                 NA)
-
-library(dplyr)
-nyc_sample <- mutate(nyc_sample, 
-                     ifelse(fare_amount > 0 & tip_amount < fare_amount, 
-                            round(tip_amount * 100 / fare_amount, 0), 
-                            NA))
-
 rxDataStep(nyc_xdf, nyc_xdf,
   transforms = list(
     tip_percent = ifelse(fare_amount > 0 & tip_amount < fare_amount, 
@@ -79,8 +70,7 @@ Sys.setenv(TZ = "US/Eastern") # not important for this dataset
 head(xforms(nyc_sample)) # test the function on a data.frame
 
 ## ----chap03chunk09-------------------------------------------------------
-nyc_sample <- rxDataStep(nyc_sample, transformFunc = xforms, 
-                         transformPackages = "lubridate")
+head(rxDataStep(nyc_sample, transformFunc = xforms, transformPackages = "lubridate"))
 
 ## ----chap03chunk10-------------------------------------------------------
 st <- Sys.time()
@@ -216,4 +206,3 @@ rxDataStep(nyc_xdf, nyc_xdf, overwrite = TRUE,
 Sys.time() - st
 rxGetInfo(nyc_xdf, numRows = 5)
 
-rxSummary(~ pickup_nhood, nyc_xdf)

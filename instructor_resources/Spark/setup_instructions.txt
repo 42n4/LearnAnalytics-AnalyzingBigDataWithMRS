@@ -65,7 +65,6 @@ install.packages('htmltools')
 install.packages('caTools')
 install.packages('knitr')
 install.packages('rmarkdown')
-install.packages('rmarkdown')
 q() # quit and say no to saving the workspace
 
 # step 11: log into worker nodes as sparkuser with ssh password and run multi-execution

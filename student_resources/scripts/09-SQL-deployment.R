@@ -100,7 +100,7 @@ source('setup.R')
 ## GO
 
 ## ----chap09chunk02-------------------------------------------------------
-sqlConnString <- sprintf("Driver=SQL Server;Server=%s;Database=RDB;Uid=ruser;Pwd=ruser", SQLSERVERNAME)
+sqlConnString <- "Driver=SQL Server;Server=.;Database=RDB;Uid=ruser;Pwd=ruser"
 sqlRowsPerRead <- 100000
 sqlTable <- "NYCTaxiSmall"
 

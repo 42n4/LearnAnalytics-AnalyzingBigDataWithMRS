@@ -1,4 +1,5 @@
-data_dir <- "C:/Users/sethmott/OneDrive/Shared/MRSTrain/"
+## ----chap02chunk01, include=FALSE----------------------------------------
+source('setup.R')
 
 ## ----chap02chunk02-------------------------------------------------------
 col_classes <- c(
