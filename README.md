@@ -2,7 +2,7 @@
 
 *Analyzing Big Data with Microsoft R* is designed to help R users learn to process, query, transform and summarize, and build models on large datasets using Microsoft R Server's `RevoScaleR` package. This course takes a **use-case-based approach** by walking through a knowledge discovery and data mining example using MRS.
 
-You will find all the rendered course content in `student_resources`. If you wish to run the code you can open the Rmd files in `instructor_resources` in your R IDE.
+You will find all the rendered course content in [`student_resources`](https://github.com/Azure/LearnAnalytics-AnalyzingBigDataWithMRS/tree/master/instructor_resources). If you wish to run the code you can open the Rmd files in [`instructor_resources`](https://github.com/Azure/LearnAnalytics-AnalyzingBigDataWithMRS/tree/master/student_resources) in your R IDE.
 
 ## Pre-requisites
 
